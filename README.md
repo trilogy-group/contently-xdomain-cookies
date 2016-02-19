@@ -24,16 +24,16 @@ Simply include the script on any page where it's needed, create a new instance o
 
 ### API
 
-#### create new xDomainIframe( iframe_domain, namespace )
+##### create new xDomainIframe( iframe_domain, namespace )
 `iframe_domain` (string, required) the domain, and optional path, where the iframe html script should be loaded from - NOTE should match the protocol/host/port of where the JS script is loaded from
 `namespace` (string,optional) a namespace to use for postMessage passing - prevents collission if you are running multiple instances of this lib on the page... usually not needed
 
-####.get( cookie_name, callback, expires_days )
+#####.get( cookie_name, callback, expires_days )
 `cookie_name` (string, required) the name of the cookie (both for local domain & iframe domain)
 `callback` (function, required) function that is called upon retreival of iframe cookie - takes 1 arg, which is the cookie value (if present)
 `expires_days` (int, optional) # of days to use for setting/re-upping cookie expiration (default is 30)
 
-####.set( cookie_name, cookie_value, expires_days )
+#####.set( cookie_name, cookie_value, expires_days )
 `cookie_name` (string, required) the name of the cookie (both for local domain & iframe domain)
 `cookie_value` (string/int/float/obj, required) the value of the cookie that we wish to set, get's JSON encoded & serialized
 `expires_days` (int, optional) # of days to use for setting cookie expiration (default is 30)
@@ -47,7 +47,7 @@ There's a full test suite that leverages zombie/connect to mock & test the libra
 npm test
 ```
 
-#### Dev Server
+##### Dev Server
 The dev server runs on localhost:3001. Once running you can map whatever hosts to 127.0.0.1 and load the JS in running local pages from {{myhost}}:3001/xdomain_cookie.js.
 ```
 npm run dev
