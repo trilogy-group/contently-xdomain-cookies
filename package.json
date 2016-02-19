@@ -1,0 +1,19 @@
+{
+  "name": "npm",
+  "version": "1.0.0",
+  "description": "JS class for cross-domain shared cookie (via iframe shim)",
+  "scripts": {
+    "test": "node_modules/.bin/mocha test/test_suite.js",
+    "dev": "node test_webserver.js"
+  },
+  "author": "Evan Carothers",
+  "license": "CC",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "connect": "^3.4.1",
+    "express": "^4.13.4",
+    "mocha": "^2.4.5",
+    "serve-static": "^1.10.2",
+    "zombie": "^4.2.1"
+  }
+}

@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<head>
+</head>
+<body>
+
+<script src="xdomain_cookie.js"></script>
+<script>
+	var existing_cookie_val = 'wrong'; //used to track success of cookie writethrough (set via callback)
+	var final_cookie_val = 'wrong'; //used to track what cookie val is finally set to
+
+	//NOTE - you need to map shared_cookie_test.com, shared_cookie_test2.com, and shared_cookie_iframe.com to 127.0.0.1 in your hosts file for development! (not needed for test runner)
+
+	if( window.location.host.substr(0,5) == 'test_' ){
+		//request is from test runner
+		var iframe_url = 'http://test_domain_iframe.com',
+			cookie_test_val = 'test1234',
+			is_dev = false;
+	}else{
+		//request is from dev box
+		var iframe_url = 'http://shared_cookie_iframe.com:3001',
+			cookie_test_val = 'set_from:'+window.location.host,
+			is_dev = true;
+	}
+
+	var xd_cookie = xDomainCookie( iframe_url, 'test.xdsc' );
+
+	xd_cookie.get( 'test_cookie', function( cookie_val ){
+		
+		if(is_dev) console.log("COOKIE VAL RETURN: ",cookie_val);
+		
+		existing_cookie_val = cookie_val;
+		
+		if(!cookie_val){
+
+			xd_cookie.set( 'test_cookie', cookie_test_val );
+			
+			//get again to verify that it was set
+			xd_cookie.get( 'test_cookie', function(cookie_val){
+				
+				if(is_dev) console.log("COOKIE VAL RETURN AFTER SET:", cookie_val);
+				
+				final_cookie_val = cookie_val;
+			});
+
+		}else{
+			
+			final_cookie_val = existing_cookie_val;
+		
+		}
+		
+	});
+
+</script>
+
+</body>
