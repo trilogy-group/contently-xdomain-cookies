@@ -1,6 +1,6 @@
 "use strict";
 
-var app = require('../test_webserver.js');
+var app = require('./test_webserver.js');
 
 const expect = require('chai').expect,
 	fs = require('fs'),

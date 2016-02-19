@@ -4,7 +4,7 @@
   "description": "JS class for cross-domain shared cookie (via iframe shim)",
   "scripts": {
     "test": "node_modules/.bin/mocha test/test_suite.js",
-    "dev": "node test_webserver.js"
+    "dev": "node test/test_webserver.js"
   },
   "author": "Evan Carothers",
   "license": "CC",

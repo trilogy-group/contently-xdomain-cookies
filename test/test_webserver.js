@@ -1,10 +1,12 @@
 var connect = require('connect'),
     serveStatic = require('serve-static');
 
+console.log(__dirname);
+
 var app = connect();
 
-app.use(serveStatic("src"));
-app.use(serveStatic("test"));
+app.use(serveStatic(__dirname+"/../src"));
+app.use(serveStatic(__dirname+"/../test"));
 
 app.use(function(req, res, next){
   res.setHeader("X-My-custom-header", ":{D");
