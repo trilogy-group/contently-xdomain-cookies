@@ -9,15 +9,31 @@ The library leverages 2 files to achieve this - a javascript file you load/run o
 
 Simply include the script on any page where it's needed, create a new instance of xDomainCookie, and leverage the get/set functions:
 ````
-var xd_cookie = xDomainCookie( 'https://my.s3bucket.com', 'my_cookie_name', 30,  'my.namespace' );
+var xd_cookie = xDomainCookie( 'https://my.s3bucket.com' );
 xd_cookie.get( function(cookie_val){
-	//cookie val will contain value of cookie as fetched from local val (if present) else from iframe
+	//cookie val will contain value of cookie as fetched from local val (if present) else from iframe (if set), else null
 	if(!cookie_val){
 		var new_val = get_what_value_should_be();
 		xd_cookie.set( new_val );
 	}
 });
 ```
+
+### API
+
+#### create new xDomainIframe( iframe_domain, namespace )
+`iframe_domain` (string, required) the domain, and optional path, where the iframe html script should be loaded from - NOTE should match the protocol/host/port of where the JS script is loaded from
+`namespace` (string,optional) a namespace to use for postMessage passing - prevents collission if you are running multiple instances of this lib on the page... usually not needed
+
+####.get( cookie_name, callback, expires_days )
+`cookie_name` (string, required) the name of the cookie (both for local domain & iframe domain)
+`callback` (function, required) function that is called upon retreival of iframe cookie - takes 1 arg, which is the cookie value (if present)
+`expires_days` (int, optional) # of days to use for setting/re-upping cookie expiration (default is 30)
+
+####.set( cookie_name, cookie_value, expires_days )
+`cookie_name` (string, required) the name of the cookie (both for local domain & iframe domain)
+`cookie_value` (string/int/float/obj, required) the value of the cookie that we wish to set, get's JSON encoded & serialized
+`expires_days` (int, optional) # of days to use for setting cookie expiration (default is 30)
 
 ### Testing
 
