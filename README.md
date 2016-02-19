@@ -70,7 +70,3 @@ npm run dev
 It is also pre-configurd with an example scenario that shows usage across domains. It requires you to map the following domains to 127.0.0.1 in your hosts file: shared_cookie_test.com, shared_cookie_test2.com, and shared_cookie_iframe.com
 
 You can then see the example working by visiting shared_cookie_test.com/test_page.html and shared_cookie_test2.com/test_page.html - take a look at the console output to see cookie behavior.
-
-
-[//]: # ### License
-[//]: # Contently releaes this library under the [MIT License](http://www.opensource.org/licenses/MIT).
