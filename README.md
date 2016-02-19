@@ -9,14 +9,17 @@ The library leverages 2 files to achieve this - a javascript file you load/run o
 
 Simply include the script on any page where it's needed, create a new instance of xDomainCookie, and leverage the get/set functions:
 ````
-var xd_cookie = xDomainCookie( 'https://my.s3bucket.com' );
-xd_cookie.get( function(cookie_val){
-	//cookie val will contain value of cookie as fetched from local val (if present) else from iframe (if set), else null
-	if(!cookie_val){
-		var new_val = get_what_value_should_be();
-		xd_cookie.set( new_val );
-	}
-});
+<script src="http://my.s3bucket.com/xdomain_cookie.js"></script>
+<script>
+	var xd_cookie = xDomainCookie( 'https://my.s3bucket.com' );
+	xd_cookie.get( function(cookie_val){
+		//cookie val will contain value of cookie as fetched from local val (if present) else from iframe (if set), else null
+		if(!cookie_val){
+			var new_val = get_what_value_should_be();
+			xd_cookie.set( new_val );
+		}
+	});
+</script>
 ```
 
 ### API
