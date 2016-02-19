@@ -5,6 +5,7 @@ This library is intended for cases where you have scripts running on different d
 
 The library leverages 2 files to achieve this - a javascript file you load/run on the page, and an HTML file that gets loaded onto that same page by the JS file. The JS & HTML files both must be served from the same domain/location (such as an s3 bucket). They leverage postMessage across the same/trusted domain to communicate and set the cookie on that domain, which can then be read/written by the same script run on any other domain you give it access to.
 
+
 ### Usage
 
 Simply include the script on any page where it's needed, create a new instance of xDomainCookie, and leverage the get/set functions:
@@ -22,27 +23,40 @@ Simply include the script on any page where it's needed, create a new instance o
 </script>
 ```
 
+
 ### API
 
-##### create new xDomainIframe( iframe_domain, namespace )
+##### xDomainIframe( iframe_domain, namespace )
+Create a new instance of the xDomainIframe object that creates the iframe in the page and is ready for usage
+
 `iframe_domain` (string, required) the domain, and optional path, where the iframe html script should be loaded from - NOTE should match the protocol/host/port of where the JS script is loaded from
+
 `namespace` (string,optional) a namespace to use for postMessage passing - prevents collission if you are running multiple instances of this lib on the page... usually not needed
 
 #####.get( cookie_name, callback, expires_days )
+Get the value of the xdomain (& local) cookie with complete callback
+
 `cookie_name` (string, required) the name of the cookie (both for local domain & iframe domain)
+
 `callback` (function, required) function that is called upon retreival of iframe cookie - takes 1 arg, which is the cookie value (if present)
+
 `expires_days` (int, optional) # of days to use for setting/re-upping cookie expiration (default is 30)
 
 #####.set( cookie_name, cookie_value, expires_days )
+Set the value of the xdomain (& local) cookie
+
 `cookie_name` (string, required) the name of the cookie (both for local domain & iframe domain)
+
 `cookie_value` (string/int/float/obj, required) the value of the cookie that we wish to set, get's JSON encoded & serialized
+
 `expires_days` (int, optional) # of days to use for setting cookie expiration (default is 30)
+
 
 ### Testing
 
 There's a full test suite that leverages zombie/connect to mock & test the library behavior across multiple domains in multiple different situations. There is also a pre-build development setup to load/test in local environments in the library. Both of these rely on npm packages, so be sure to do an `npm install` in the root dir before running.
 
-#### Test suite
+##### Test suite
 ```
 npm test
 ```
