@@ -5,6 +5,8 @@
 		//iframe_path = full TLD (and optional path) to location where iframe_shared_cookie.html is served from, and domain cookie will be set on
 		//namespace = namespace to use when identifying that postMessage calls incoming are for our use
 
+		if( iframe_path.substr(0,2)=='//' ) iframe_path = (window.location.protocol=='https:'?'https:':'http:')+iframe_path; //verify protocol is present & used
+
 		var _namespace = namespace || 'xdsc',						//namespace for the shared cookie in case there are multiple instances on one page - prevents postMessage collision
 			_load_wait_ms = iframe_load_timeout_ms || (1000*6), 	//wait 6 seconds if no other overloaded wait time specified
 			_iframe_ready = false,									//has the iframe posted back as ready?

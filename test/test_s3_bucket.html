@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<head>
+</head>
+<body>
+
+
+<script src="http://localhost:3001/xdomain_cookie.js"></script>
+<script>
+    
+    //simple test of xdomain lib for s3 bucket location w/ no protocol specified
+    var s3_bucket_path = 'my_bucket_name';
+
+	var new_val = null;
+    var xd_cookie = xDomainCookie( '//'+s3_bucket_path );
+    xd_cookie.get( 's3_test_cookie', function(cookie_val){
+        //cookie val will contain value of cookie as fetched from local val (if present) else from iframe (if set), else null
+        console.log(".get() result ",cookie_val);
+        if(!cookie_val){
+            new_val = 'test1234';
+            console.log(".set() called with ",new_val);
+            xd_cookie.set( 's3_test_cookie', new_val );
+        }
+    });
+</script>
+</body>

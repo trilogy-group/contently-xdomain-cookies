@@ -13,11 +13,11 @@ Simply include the script on any page where it's needed, create a new instance o
 <script src="http://my.s3bucket.com/xdomain_cookie.js"></script>
 <script>
 	var xd_cookie = xDomainCookie( 'https://my.s3bucket.com' );
-	xd_cookie.get( function(cookie_val){
+	xd_cookie.get( 'cookie_name', function(cookie_val){
 		//cookie val will contain value of cookie as fetched from local val (if present) else from iframe (if set), else null
 		if(!cookie_val){
 			var new_val = get_what_value_should_be();
-			xd_cookie.set( new_val );
+			xd_cookie.set( 'cookie_name', new_val );
 		}
 	});
 </script>
