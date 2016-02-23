@@ -90,6 +90,8 @@
 		function _set_xdomain_cookie_value( cookie_name, cookie_value, expires_days ){
 
 			expires_days = expires_days || _default_expires_days;
+			//if cookie is empty (null or undefined) delete the cookie
+			expires_days = (cookie_value===null || cookie_value===undefined) ? (new Date(0)) : expires_days;
 
 			_set_local_cookie( cookie_name, cookie_value, expires_days );
 
