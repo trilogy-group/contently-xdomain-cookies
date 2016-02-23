@@ -62,7 +62,7 @@
 				msg_type: 'xdsc_write',
 				cookie_name: cookie_name,
 				cookie_val: cookie_value,
-				expires_days: expires_days,
+				expires_days: expires_days
 			};
 
 			document.getElementById('xdomain_cookie_'+_id).contentWindow.postMessage(JSON.stringify(data), iframe_path );
@@ -74,7 +74,7 @@
 		    var ca = document.cookie.split(';');
 		    for(var i=0; i<ca.length; i++) {
 		        var c = ca[i].trim();
-		        if (c.indexOf(name) == 0) return decodeURIComponent( c.substring(name.length,c.length) );
+		        if (c.indexOf(name) === 0) return decodeURIComponent( c.substring(name.length,c.length) );
 		    }
 		    return "";
 		}
@@ -91,7 +91,7 @@
 
 			expires_days = expires_days || _default_expires_days;
 			//if cookie is empty (null or undefined) delete the cookie
-			expires_days = (cookie_value===null || cookie_value===undefined) ? (new Date(0)) : expires_days;
+			expires_days = (cookie_value===null || cookie_value===undefined) ? -100 : expires_days;
 
 			_set_local_cookie( cookie_name, cookie_value, expires_days );
 
