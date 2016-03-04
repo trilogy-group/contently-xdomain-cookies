@@ -13,7 +13,7 @@
 			_iframe_load_error = false,								//was there an error loading the iframe from specified iframe_path in designated iframe_load_timeout_ms?
 			_callbacks = [],										//list of pending callbacks to ping when iframe is ready or err occurs
 			_xdomain_cookie_data = {},								//shared cookie data set by the iframe after load/ready
-			_id = new Date().getTime(),								//identifier to use for iframe in case there are multiple on the page
+			_id = new Date().getTime(),							//identifier to use for iframe in case there are multiple on the page
 			_default_expires_days = 30;								//default expiration days for cookies when re-uppded
 
 		//function called on inbound post message - filter/verify that message is for our consumption, then set ready data an fire callbacks
@@ -110,7 +110,10 @@
 			//cb function to create closure for pending user callback
 			function _cb( xdomain_success, cookie_val, callback ){
 
-				callback( cookie_val );
+				//re-up the cookie
+				_set_xdomain_cookie_value( cookie_name, cookie_val, expires_days );
+
+				if(typeof callback == 'function') callback( cookie_val );
 			}
 
 			//see if local cookie is set - if so, no need to wait for iframe to fetch cookie
