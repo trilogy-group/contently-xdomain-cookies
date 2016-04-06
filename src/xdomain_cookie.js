@@ -23,7 +23,8 @@
 	        }catch(e){
 	        	var data = null;
 	        }
-	        if(typeof data=='object' && !(data instanceof Array) &&  'msg_type' in data && data.msg_type=='xdsc_read' && 'namespace' in data && data.namespace === _namespace){
+	        if(!data) return;
+	        if(typeof data==='object' && !(data instanceof Array) &&  'msg_type' in data && data.msg_type=='xdsc_read' && 'namespace' in data && data.namespace === _namespace){
 	        	//NOTE - the only thing iframe postMessages to us is when it's initially loaded, and it includes payload of all cookies set on iframe domain
 	        	_xdomain_cookie_data = data.cookies;
 				_iframe_ready = true;
