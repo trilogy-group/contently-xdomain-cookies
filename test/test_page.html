@@ -5,6 +5,14 @@
 
 <script src="xdomain_cookie.js"></script>
 <script>
+
+	var js_errors = [];
+	window.onerror = function(message, source, lineno, colno, error) {
+		var err = {message:message, source:source, lineno:lineno, colno:colno, error:error};
+		js_errors.push(err);
+		console.error("JS ERROR",err);
+	};
+
 	var existing_cookie_val = 'wrong'; //used to track success of cookie writethrough (set via callback)
 	var final_cookie_val = 'wrong'; //used to track what cookie val is finally set to
 

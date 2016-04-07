@@ -18,6 +18,7 @@
 
 		//function called on inbound post message - filter/verify that message is for our consumption, then set ready data an fire callbacks
 		function _inbound_postmessage( event ){
+			if(typeof event.data !== 'string') return; //expected json string encoded payload
 			try{
 	        	var data = JSON.parse(event.data);
 	        }catch(e){
@@ -140,7 +141,7 @@
 		}
 
 		//bind postmessage listeners for incoming messages from iframe
-		window.addEventListener('message', _inbound_postmessage);
+		window.addEventListener('message', _inbound_postmessage );
 
 		//create hidden iframe on the page that loads from same domain as this script and is used for communication / cookie setting
 		var ifr = document.createElement('iframe');
@@ -170,9 +171,7 @@
 	exports.xDomainCookie = xDomainCookie;
 })(this);
 
-
 /*
-
 //EXAMPLE OF USAGE
 
 var shared_cookie = xDomainSharedCookie( 'https://shared.contently.com', 'contently.ifsc' );

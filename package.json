@@ -1,6 +1,6 @@
 {
   "name": "xdomain-cookies",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "JS class for cross-domain shared cookie (via iframe shim)",
   "scripts": {
     "test": "node_modules/.bin/mocha test/test_suite.js",

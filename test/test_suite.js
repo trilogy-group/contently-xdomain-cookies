@@ -14,7 +14,8 @@ const 	TEST_COOKIE_NAME = 'test_cookie',
 		EXPECTED_UNSET_COOKIE_VAL = 'test1234',
 		EXPECTED_SET_COOKIE_VAL = 'preset1234',
 		JS_VAR_EXISTING_VAL = 'existing_cookie_val',
-		JS_VAR_FINAL_VAL = 'final_cookie_val';
+		JS_VAR_FINAL_VAL = 'final_cookie_val',
+		JS_CAPTURED_ERRORS = 'js_errors';
 
 //register needed domains to route throug localhost w/ zombie
 Browser.localhost(HTML_DOMAIN_1,3002);
@@ -436,4 +437,51 @@ describe("Iframe shared cookie",function(){
 
 	});
 	
+	describe('Single Domain, 3rd party postMessage calls with weird payloads', function(){
+		//Assert that postMessage calls with various odd payloads don't interfere with our postMessage listeners
+
+		before(function( done ){
+			this.browser = new Browser();
+			this.browser.on('error',function(err){
+				console.log("BROWSER ERROR",err);
+			});
+			this.browser.deleteCookies();
+			var _browser = this.browser;
+			this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html',function(){
+				setTimeout(function(){
+		    		_browser.window.postMessage({ foo:'bar' },'*');
+		    		_browser.window.postMessage( null, '*' );
+		    		_browser.window.postMessage( 'random stuff', '*' );
+		    		_browser.window.postMessage( [], '*' );
+		    		_browser.window.postMessage( '[]', '*' );
+		    		_browser.window.postMessage( 'null', '*' );
+		    		_browser.window.postMessage( 'false', '*' );
+		    		_browser.window.postMessage( true, '*' );
+		    		_browser.window.postMessage( 'true', '*' );
+		    		_browser.window.postMessage( false, '*' );
+		    		setTimeout(done,300);
+		    	},300);
+	    	});
+		});
+
+		it('expect no JS errors, and setting cookie still worked', function(){
+
+			//verify that there were no JS errors
+			var page_errs = this.browser.evaluate(JS_CAPTURED_ERRORS);
+			expect( page_errs.length ).to.equal( 0 );
+			expect( this.browser.errors.length ).to.equal( 0 );
+
+			expect( this.browser.queryAll('iframe[src*="http://'+IFRAME_DOMAIN+'/xdomain_cookie.html"]' ).length).to.equal(1);
+			//verify there was no existing/returned val from .get()
+			expect( this.browser.evaluate(JS_VAR_EXISTING_VAL) ).to.equal( null );
+			//verify that final val was set correctly
+			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
+			//check cookie values
+			var local_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			expect( local_cookie ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			expect( iframe_cookie ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
+			
+		});
+	})
 });
