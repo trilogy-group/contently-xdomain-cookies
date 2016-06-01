@@ -33,16 +33,8 @@ Create a new instance of the xDomainIframe object that creates the iframe in the
 
 `namespace` (string,optional) a namespace to use for postMessage passing - prevents collission if you are running multiple instances of this lib on the page... usually not needed
 
-#####.get( cookie_name, callback, expires_days )
-Get the value of the xdomain (& local) cookie with complete callback
 
-`cookie_name` (string, required) the name of the cookie (both for local domain & iframe domain)
-
-`callback` (function, required) function that is called upon retreival of iframe cookie - takes 1 arg, which is the cookie value (if present)
-
-`expires_days` (int, optional) # of days to use for setting/re-upping cookie expiration (default is 30)
-
-#####.set( cookie_name, cookie_value, expires_days )
+#####.set( cookie_name, cookie_value, expires_days, xdomain_only )
 Set the value of the xdomain (& local) cookie
 
 `cookie_name` (string, required) the name of the cookie (both for local domain & iframe domain)
@@ -50,6 +42,20 @@ Set the value of the xdomain (& local) cookie
 `cookie_value` (string/int/float/obj, required) the value of the cookie that we wish to set, get's JSON encoded & serialized
 
 `expires_days` (int, optional) # of days to use for setting cookie expiration (default is 30)
+
+`xdomain_only` (boolean, optional, default false) if the cookie should _only_ be set on the xdomain site, not locally.. meaning that the xdomain version acts as the source of truth for the cookie value and eliminates local caching
+
+
+#####.get( cookie_name, callback, expires_days, xdomain_only )
+Get the value of the xdomain (& local) cookie with complete callback. _NOTE: this function also re-ups the xdomain cookie as if it was being re-set with .set()_
+
+`cookie_name` (string, required) the name of the cookie (both for local domain & iframe domain)
+
+`callback` (function, required) function that is called upon retreival of iframe cookie - takes 1 arg, which is the cookie value (if present)
+
+`expires_days` (int, optional) # of days to use for setting/re-upping cookie expiration (default is 30)
+
+`xdomain_only` (boolean, optional, default false) if cookie is xdomain only - see documentation for .set()
 
 
 ### Testing

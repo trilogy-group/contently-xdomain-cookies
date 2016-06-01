@@ -13,6 +13,8 @@
 		console.error("JS ERROR",err);
 	};
 
+	var xdomain_only = location.hash==='#xdomain_only' ? true : false; //load URL w/ hash value to signify xdomain only
+
 	var existing_cookie_val = 'wrong'; //used to track success of cookie writethrough (set via callback)
 	var final_cookie_val = 'wrong'; //used to track what cookie val is finally set to
 
@@ -40,7 +42,7 @@
 		
 		if(!cookie_val){
 
-			xd_cookie.set( 'test_cookie', cookie_test_val );
+			xd_cookie.set( 'test_cookie', cookie_test_val, 30, xdomain_only );
 			
 			//get again to verify that it was set
 			xd_cookie.get( 'test_cookie', function(cookie_val){
@@ -48,7 +50,7 @@
 				if(is_dev) console.log("COOKIE VAL RETURN AFTER SET:", cookie_val);
 				
 				final_cookie_val = cookie_val;
-			});
+			}, 30, xdomain_only );
 
 		}else{
 			
@@ -56,7 +58,7 @@
 		
 		}
 		
-	});
+	}, 30, xdomain_only );
 
 </script>
 

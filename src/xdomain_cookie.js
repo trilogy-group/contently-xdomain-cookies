@@ -13,11 +13,12 @@
 			_iframe_load_error = false,								//was there an error loading the iframe from specified iframe_path in designated iframe_load_timeout_ms?
 			_callbacks = [],										//list of pending callbacks to ping when iframe is ready or err occurs
 			_xdomain_cookie_data = {},								//shared cookie data set by the iframe after load/ready
-			_id = new Date().getTime(),							//identifier to use for iframe in case there are multiple on the page
+			_id = new Date().getTime(),								//identifier to use for iframe in case there are multiple on the page
 			_default_expires_days = 30;								//default expiration days for cookies when re-uppded
 
 		//function called on inbound post message - filter/verify that message is for our consumption, then set ready data an fire callbacks
 		function _inbound_postmessage( event ){
+
 			if(typeof event.data !== 'string') return; //expected json string encoded payload
 			try{
 	        	var data = JSON.parse(event.data);
@@ -89,15 +90,22 @@
 		}
 
 		//function to set the value for both cookies (local & xdomain)
-		function _set_xdomain_cookie_value( cookie_name, cookie_value, expires_days ){
+		function _set_xdomain_cookie_value( cookie_name, cookie_value, expires_days, xdomain_only ){
+			
+			//if iframe isn't ready, wait for it to be ready
+			if(!_iframe_ready && !_iframe_load_error){
+				return _callbacks.push(function(load_error){
+					_set_xdomain_cookie_value( cookie_name, cookie_value, expires_days, xdomain_only);
+				});
+			}
 
 			expires_days = expires_days || _default_expires_days;
 			//if cookie is empty (null or undefined) delete the cookie
 			expires_days = (cookie_value===null || cookie_value===undefined) ? -100 : expires_days;
 
-			_set_local_cookie( cookie_name, cookie_value, expires_days );
+			if(xdomain_only!==true) _set_local_cookie( cookie_name, cookie_value, expires_days );
 
-			if(_iframe_ready && !_iframe_load_error){
+			if(!_iframe_load_error){
 				_set_cookie_in_iframe( cookie_name, cookie_value, expires_days );
 			}
 
@@ -105,7 +113,7 @@
 
 		//function to call after instantiation to sync a cookie, supplying a cookie name, value to write if it does NOT exist, expires 
 		//time (in ms from now), and a callback for completion (which includes the resolved cookie value as the only argument)
-		function _get_xdomain_cookie_value( cookie_name, callback, expires_days ){
+		function _get_xdomain_cookie_value( cookie_name, callback, expires_days, xdomain_only ){
 			
 			expires_days = expires_days || _default_expires_days;
 
@@ -113,7 +121,7 @@
 			function _cb( xdomain_success, cookie_val, callback ){
 
 				//re-up the cookie
-				_set_xdomain_cookie_value( cookie_name, cookie_val, expires_days );
+				_set_xdomain_cookie_value( cookie_name, cookie_val, expires_days, xdomain_only );
 
 				if(typeof callback == 'function') callback( cookie_val );
 			}

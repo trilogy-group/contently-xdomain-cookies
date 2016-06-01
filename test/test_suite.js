@@ -42,6 +42,35 @@ describe("Iframe shared cookie",function(){
     	this.server.close(done);
   	});
 
+  	describe('Single domain, xdomain_only cookie', function(){
+
+  		before(function(){
+			this.browser = new Browser();
+			this.browser.deleteCookies();
+		})
+
+		before(function(done) {
+	    	this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html#xdomain_only',function(){
+	    		setTimeout(done, 1000); //wait for postmessage
+	    	});
+	  	});
+
+		it('get/set cookie, local cookie never set but cookie set in iframe',function(){
+			expect( this.browser.queryAll('iframe[src*="http://'+IFRAME_DOMAIN+'/xdomain_cookie.html"]' ).length).to.equal(1);
+			//verify there was no existing/returned val from .get()
+			expect( this.browser.evaluate(JS_VAR_EXISTING_VAL) ).to.equal( null );
+			//verify that final val was set correctly
+			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
+			
+			//check cookie values
+			var local_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			expect( local_cookie ).to.equal( null );
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			expect( iframe_cookie ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
+		});
+
+  	});
+
 	describe('Across multiple domains, local cookie present on both domains', function() {
 		
 		var TEMP_NEWVAL = 'new_val';
@@ -380,7 +409,6 @@ describe("Iframe shared cookie",function(){
 		})
 
 		before(function(done) {
-	    	//TODO - fix date
 	    	var cookie_data = { name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', value: EXPECTED_SET_COOKIE_VAL, expires:new Date((new Date().getTime())+(1000*60*10))};
 	    	this.browser.setCookie(cookie_data);
 	    	this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html',function(){
@@ -412,7 +440,6 @@ describe("Iframe shared cookie",function(){
 		})
 
 		before(function(done) {
-	    	//TODO - fix date
 	    	var cookie_data = { name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', value: EXPECTED_SET_COOKIE_VAL, expires:new Date((new Date().getTime())+(1000*60*10))};
 	    	this.browser.setCookie(cookie_data);
 	    	var cookie_data2 = { name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', value: 'dont_use', expires:new Date((new Date().getTime())+(1000*60*10))};
@@ -484,4 +511,5 @@ describe("Iframe shared cookie",function(){
 			
 		});
 	})
+	
 });

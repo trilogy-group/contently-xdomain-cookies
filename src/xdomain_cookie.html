@@ -39,17 +39,23 @@
 		        }
 		        if(typeof data=='object' &&  'msg_type' in data && data.msg_type=='xdsc_write' && 'namespace' in data && data.namespace === _namespace){
 		        	_set_local_cookie( data.cookie_name, data.cookie_val, parseInt(data.expires_days,10) );
+		        	//ping down to page again to update values of xdomain cookie data
+		        	_send_xdomain_cookie_data_to_page();
 		        }
 			});
 
+			function _send_xdomain_cookie_data_to_page(){
+				var msg = {
+					cookies: _get_local_cookies(),
+					msg_type: 'xdsc_read',
+					namespace: _namespace
+				};
+				//postmessage to parent window w/ data
+				window.parent.postMessage(JSON.stringify(msg), _origin);
+			}
+
 			//initialization - ping parent window w/ cookie payload right away so it an hit callbacks asap
-			var msg = {
-				cookies: _get_local_cookies(),
-				msg_type: 'xdsc_read',
-				namespace: _namespace
-			};
-			//postmessage to parent window w/ data
-			window.parent.postMessage(JSON.stringify(msg), _origin);
+			_send_xdomain_cookie_data_to_page();
 
 		})();
 	</script>
