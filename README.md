@@ -26,15 +26,17 @@ Simply include the script on any page where it's needed, create a new instance o
 
 ### API
 
-##### xDomainIframe( iframe_domain, namespace )
+##### xDomainIframe( iframe_domain, namespace, xdomain_only )
 Create a new instance of the xDomainIframe object that creates the iframe in the page and is ready for usage
 
 `iframe_domain` (string, required) the domain, and optional path, where the iframe html script should be loaded from - NOTE should match the protocol/host/port of where the JS script is loaded from
 
 `namespace` (string,optional) a namespace to use for postMessage passing - prevents collission if you are running multiple instances of this lib on the page... usually not needed
 
+`xdomain_only` (boolean, optional, default false) if the cookie should _only_ be set on the xdomain site, not locally.. meaning that the xdomain version acts as the source of truth for the cookie value and eliminates local caching
 
-#####.set( cookie_name, cookie_value, expires_days, xdomain_only )
+
+#####.set( cookie_name, cookie_value, expires_days )
 Set the value of the xdomain (& local) cookie
 
 `cookie_name` (string, required) the name of the cookie (both for local domain & iframe domain)
@@ -43,10 +45,8 @@ Set the value of the xdomain (& local) cookie
 
 `expires_days` (int, optional) # of days to use for setting cookie expiration (default is 30)
 
-`xdomain_only` (boolean, optional, default false) if the cookie should _only_ be set on the xdomain site, not locally.. meaning that the xdomain version acts as the source of truth for the cookie value and eliminates local caching
 
-
-#####.get( cookie_name, callback, expires_days, xdomain_only )
+#####.get( cookie_name, callback, expires_days )
 Get the value of the xdomain (& local) cookie with complete callback. _NOTE: this function also re-ups the xdomain cookie as if it was being re-set with .set()_
 
 `cookie_name` (string, required) the name of the cookie (both for local domain & iframe domain)
@@ -54,9 +54,6 @@ Get the value of the xdomain (& local) cookie with complete callback. _NOTE: thi
 `callback` (function, required) function that is called upon retreival of iframe cookie - takes 1 arg, which is the cookie value (if present)
 
 `expires_days` (int, optional) # of days to use for setting/re-upping cookie expiration (default is 30)
-
-`xdomain_only` (boolean, optional, default false) if cookie is xdomain only - see documentation for .set()
-
 
 ### Testing
 

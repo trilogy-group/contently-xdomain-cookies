@@ -32,7 +32,7 @@
 			is_dev = true;
 	}
 
-	var xd_cookie = xDomainCookie( iframe_url, 'test.xdsc' );
+	var xd_cookie = xDomainCookie( iframe_url, 'test.xdsc', xdomain_only );
 
 	xd_cookie.get( 'test_cookie', function( cookie_val ){
 		
