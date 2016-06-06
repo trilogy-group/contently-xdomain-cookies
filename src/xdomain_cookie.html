@@ -37,7 +37,7 @@
 		        }catch(e){
 		        	var data = null;
 		        }
-		        if(typeof data=='object' &&  'msg_type' in data && data.msg_type=='xdsc_write' && 'namespace' in data && data.namespace === _namespace){
+		        if(data && typeof data=='object' &&  'msg_type' in data && data.msg_type=='xdsc_write' && 'namespace' in data && data.namespace === _namespace){
 		        	_set_local_cookie( data.cookie_name, data.cookie_val, parseInt(data.expires_days,10) );
 		        	//ping down to page again to update values of xdomain cookie data
 		        	_send_xdomain_cookie_data_to_page();
