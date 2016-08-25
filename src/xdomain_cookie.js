@@ -113,6 +113,9 @@
 				_set_cookie_in_iframe( cookie_name, cookie_value, expires_days );
 			}
 
+			//set local cached value
+			_xdomain_cookie_data[cookie_name] = cookie_value;
+
 		}
 
 		//function to call after instantiation to sync a cookie, supplying a cookie name, value to write if it does NOT exist, expires 

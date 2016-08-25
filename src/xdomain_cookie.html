@@ -34,14 +34,14 @@
 			window.addEventListener('message', function(event){
 
 				var origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
-				if (origin !== _iframe_origin) return; //incoming message not from iframe page
-
+				if ( [_window_origin,_iframe_origin].indexOf(origin) === -1 ) return; //incoming message not from iframe page
+				
 				//We must filter messages here to verify that it's the specific message/type we are looking for, and not from another script
 				var data = null;
 				try{
 		        	data = JSON.parse(event.data);
 		        }catch(e){}
-
+		        
 		        if(data && typeof data==='object' &&  'msg_type' in data && data.msg_type==='xdsc_write' && 'namespace' in data && data.namespace === _namespace){
 		        	_set_local_cookie( data.cookie_name, data.cookie_val, parseInt(data.expires_days,10) );
 		        	//ping down to page again to update values of xdomain cookie data

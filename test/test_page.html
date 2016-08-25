@@ -42,6 +42,8 @@
 		
 		if(!cookie_val){
 
+			if(is_dev) console.log("SETTING EMPTY COOKIE", cookie_test_val);
+			
 			xd_cookie.set( 'test_cookie', cookie_test_val, 30, xdomain_only );
 			
 			//get again to verify that it was set
