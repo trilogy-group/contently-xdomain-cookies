@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <HEAD>
 	<script>
+		"use strict";
 		window.IframeShim = (function(){
 
 			//orign & namespace data is passed in via urlencoded json object in url hash
 			var _hash_data = JSON.parse(decodeURIComponent(window.location.hash.substr(1))),
 				_namespace = _hash_data.namespace,
-				_origin = _hash_data.origin;
+				_window_origin = _hash_data.window_origin,
+				_iframe_origin = _hash_data.iframe_origin;
 
 			//basic cookie getter function (returns object of all cookies key/val)
-			function _get_local_cookies( cookie_name ){
-				var name = cookie_name + "=",
-					ca = document.cookie.split(';'),
+			function _get_local_cookies(){
+				var ca = document.cookie.split(';'),
 					cookies = {};
 			    for(var i=0; i<ca.length; i++) {
 			        var c = ca[i].trim(),
@@ -31,13 +32,17 @@
 
 			//listen for incoming postMessage requests (to write cookie, incoming from local page that loaded iframe)
 			window.addEventListener('message', function(event){
-				//NOTE - we must filter messages here to verify that it's the specific message/type we are looking for, and not from another window or script
+
+				var origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
+				if (origin !== _iframe_origin) return; //incoming message not from iframe page
+
+				//We must filter messages here to verify that it's the specific message/type we are looking for, and not from another script
+				var data = null;
 				try{
-		        	var data = JSON.parse(event.data);
-		        }catch(e){
-		        	var data = null;
-		        }
-		        if(data && typeof data=='object' &&  'msg_type' in data && data.msg_type=='xdsc_write' && 'namespace' in data && data.namespace === _namespace){
+		        	data = JSON.parse(event.data);
+		        }catch(e){}
+
+		        if(data && typeof data==='object' &&  'msg_type' in data && data.msg_type==='xdsc_write' && 'namespace' in data && data.namespace === _namespace){
 		        	_set_local_cookie( data.cookie_name, data.cookie_val, parseInt(data.expires_days,10) );
 		        	//ping down to page again to update values of xdomain cookie data
 		        	_send_xdomain_cookie_data_to_page();
@@ -51,7 +56,7 @@
 					namespace: _namespace
 				};
 				//postmessage to parent window w/ data
-				window.parent.postMessage(JSON.stringify(msg), _origin);
+				window.parent.postMessage(JSON.stringify(msg), _window_origin);
 			}
 
 			//initialization - ping parent window w/ cookie payload right away so it an hit callbacks asap

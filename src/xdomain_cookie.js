@@ -5,7 +5,7 @@
 		//iframe_path = full TLD (and optional path) to location where iframe_shared_cookie.html is served from, and domain cookie will be set on
 		//namespace = namespace to use when identifying that postMessage calls incoming are for our use
 
-		if( iframe_path.substr(0,2)=='//' ) iframe_path = (window.location.protocol=='https:'?'https:':'http:')+iframe_path; //verify protocol is present & used
+		if( iframe_path.substr(0,2)==='//' ) iframe_path = (window.location.protocol==='https:'?'https:':'http:')+iframe_path; //verify protocol is present & used
 
 		var _namespace = namespace || 'xdsc',						//namespace for the shared cookie in case there are multiple instances on one page - prevents postMessage collision
 			_load_wait_ms = iframe_load_timeout_ms || (1000*6), 	//wait 6 seconds if no other overloaded wait time specified
@@ -15,19 +15,22 @@
 			_xdomain_cookie_data = {},								//shared cookie data set by the iframe after load/ready
 			_id = new Date().getTime(),								//identifier to use for iframe in case there are multiple on the page
 			_default_expires_days = 30,								//default expiration days for cookies when re-uppded
-			_xdomain_only = xdomain_only===true;					//should we ONLY use xdomain cookies (and avoid local cache)
+			_xdomain_only = !!xdomain_only;							//should we ONLY use xdomain cookies (and avoid local cache)
 
 		//function called on inbound post message - filter/verify that message is for our consumption, then set ready data an fire callbacks
 		function _inbound_postmessage( event ){
 
+			var origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
+			if (origin !== iframe_path) return; //incoming message not from iframe
+			
 			if(typeof event.data !== 'string') return; //expected json string encoded payload
+			var data = null;
 			try{
-	        	var data = JSON.parse(event.data);
-	        }catch(e){
-	        	var data = null;
-	        }
+	        	data = JSON.parse(event.data);
+	        }catch(e){}
+
 	        if(!data) return;
-	        if(typeof data==='object' && !(data instanceof Array) &&  'msg_type' in data && data.msg_type=='xdsc_read' && 'namespace' in data && data.namespace === _namespace){
+	        if(typeof data==='object' && !(data instanceof Array) &&  'msg_type' in data && data.msg_type==='xdsc_read' && 'namespace' in data && data.namespace === _namespace){
 	        	//NOTE - the only thing iframe postMessages to us is when it's initially loaded, and it includes payload of all cookies set on iframe domain
 	        	_xdomain_cookie_data = data.cookies;
 				_iframe_ready = true;
@@ -124,18 +127,20 @@
 				//re-up the cookie
 				_set_xdomain_cookie_value( cookie_name, cookie_val, expires_days );
 
-				if(typeof callback == 'function') callback( cookie_val );
+				if(typeof callback === 'function') callback( cookie_val );
 			}
 
-			//see if local cookie is set - if so, no need to wait for iframe to fetch cookie
-			var _existing_local_cookie_val = _get_local_cookie( cookie_name );
-			if(_existing_local_cookie_val){
-				//set onready call to write-through cookie once iframe is ready, then call callback directly
-				_on_iframe_ready_or_error( function( is_err ){
-					_cb( !is_err, _existing_local_cookie_val );
-				});
-				return callback( _existing_local_cookie_val );
-			} 
+			if(!_xdomain_only){
+				//see if local cookie is set - if so, no need to wait for iframe to fetch cookie
+				var _existing_local_cookie_val = _get_local_cookie( cookie_name );
+				if(_existing_local_cookie_val){
+					//set onready call to write-through cookie once iframe is ready, then call callback directly
+					_on_iframe_ready_or_error( function( is_err ){
+						_cb( !is_err, _existing_local_cookie_val );
+					});
+					return callback( _existing_local_cookie_val );
+				} 
+			}
 
 			//no local cookie is set/present, so bind CB to iframe ready/error callback so it's pinged a soon as we hit a ready state from iframe
 			_on_iframe_ready_or_error(function( is_err ){
@@ -158,7 +163,8 @@
 		ifr.id = 'xdomain_cookie_'+_id;
 		var data = {
 			namespace: _namespace,
-			origin: window.location.origin
+			window_origin: window.location.origin,
+			iframe_origin: iframe_path
 		};
 		ifr.src = iframe_path+'/xdomain_cookie.html#'+encodeURIComponent(JSON.stringify(data));
 		document.body.appendChild( ifr );

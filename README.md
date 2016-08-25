@@ -5,14 +5,19 @@ This library is intended for cases where you have scripts running on different d
 
 The library leverages 2 files to achieve this - a javascript file you load/run on the page, and an HTML file that gets loaded onto that same page by the JS file. The JS & HTML files both must be served from the same domain/location (such as an s3 bucket). They leverage postMessage across the same/trusted domain to communicate and set the cookie on that domain, which can then be read/written by the same script run on any other domain you give it access to.
 
+Authored by *Authored by* [Evan Carothers](https://github.com/ecaroth) @ [Contently](http://www.contently.com)
 
-### Usage
+Read the backstory and usage details at on the Building Contently Blog entry [Tracking people across multiple domains — when cookies just aren’t enough](https://medium.com/building-contently/tracking-people-across-multiple-domains-when-cookies-just-arent-enough-b270cc95beb1)
+
+Usage
+------
 
 Simply include the script on any page where it's needed, create a new instance of xDomainCookie, and leverage the get/set functions:
-````
-<script src="http://my.s3bucket.com/xdomain_cookie.js"></script>
+
+```html
+<script src="//my.s3bucket.com/xdomain_cookie.js"></script>
 <script>
-	var xd_cookie = xDomainCookie( 'https://my.s3bucket.com' );
+	var xd_cookie = xDomainCookie( '//my.s3bucket.com' );
 	xd_cookie.get( 'cookie_name', function(cookie_val){
 		//cookie val will contain value of cookie as fetched from local val (if present) else from iframe (if set), else null
 		if(!cookie_val){
@@ -23,8 +28,15 @@ Simply include the script on any page where it's needed, create a new instance o
 </script>
 ```
 
+Usage Notes
+------
 
-### API
+_Please Note_ that it's important for the `xdomain_cookie.js` file to be served from the same domain _and_ protocol as the path passed in for the iframe creation (when creating `xDomainCookie`). You can setup the script to use whichever page the protocol of the main window is using by specifying `//` as the protocol prefix (instead of explicit `https://` or `http://`, assuming the webserver hosting the `xdomain_cookie.html` file supports that procolol). It's also OK to serve both the script and iframe path over HTTPS in all instances, regardless of if the main page is loaded over HTTPS.
+
+This script should work in all modern desktop and mobile browsers that support the postMessage API (IE 8+, Chrome, FF, etc).
+
+API
+------
 
 ##### xDomainIframe( iframe_domain, namespace, xdomain_only )
 Create a new instance of the xDomainIframe object that creates the iframe in the page and is ready for usage
@@ -33,7 +45,7 @@ Create a new instance of the xDomainIframe object that creates the iframe in the
 
 `namespace` (string,optional) a namespace to use for postMessage passing - prevents collission if you are running multiple instances of this lib on the page... usually not needed
 
-`xdomain_only` (boolean, optional, default false) if the cookie should _only_ be set on the xdomain site, not locally.. meaning that the xdomain version acts as the source of truth for the cookie value and eliminates local caching
+`xdomain_only` (boolean, optional, default false) if the cookie should _only_ be set on the xdomain site, not locally.. meaning that the xdomain version acts as the source of truth for the cookie value and eliminates local caching. _PLEASE NOTE_ that this flag can provide specific intended behavior for different use cases. See the _Cross Domain ONLY Cookies_ section further down the readme for more info
 
 
 #####.set( cookie_name, cookie_value, expires_days )
@@ -55,7 +67,17 @@ Get the value of the xdomain (& local) cookie with complete callback. _NOTE: thi
 
 `expires_days` (int, optional) # of days to use for setting/re-upping cookie expiration (default is 30)
 
-### Testing
+
+Cross Domain ONLY Cookies
+------
+
+By default the `xDomainCookies` class is configured to set and use a local cookie as a caching mechanism to allow the callback for `.get()` to return as fast as possible. This is based on the fact that you are setting a piece of information that _should not change_ on any domains you are using the xDomainCookie on, as if you change the cookie from a single domain and it's cached locally at another domain, that local cache will prevent the updated value from being returned by the `get()` callback on that specific domain. 
+
+For use cases where you are setting a cookie value that should not change (such as something simple like a user ID), allowing the local cookie cache to function is useful and ideal. If, however, you are using advanced data types (such as a serialzed JSON object that has a property that can be updated from multiple domains, and needs to always have the most updated values accessible), then you should pass in `true` for the _xdomain_only_ param when creating a new `xDomainIframe` instance. This means that the local cookie cache isn't used, and the iframe must fully lead before the callback to `get()` will fire, but will guarantee that any interaction with the cookie data will always use up-to-date values.
+
+
+Testing
+------
 
 There's a full test suite that leverages zombie/connect to mock & test the library behavior across multiple domains in multiple different situations. There is also a pre-build development setup to load/test in local environments in the library. Both of these rely on npm packages, so be sure to do an `npm install` in the root dir before running.
 

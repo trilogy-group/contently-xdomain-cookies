@@ -1,6 +1,10 @@
 {
   "name": "xdomain-cookies",
-  "version": "1.0.3",
+  "version": "1.0.4",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contently/xdomain-cookies"
+  },
   "description": "JS class for cross-domain shared cookie (via iframe shim)",
   "scripts": {
     "test": "node_modules/.bin/mocha test/test_suite.js",

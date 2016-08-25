@@ -42,6 +42,114 @@ describe("Iframe shared cookie",function(){
     	this.server.close(done);
   	});
 
+	describe('Across multiple domains, xdomain_only on domain 2 only, no cookies set initially', function() {
+		
+		var TEMP_NEWVAL = 'new_val';
+
+		before(function(){
+			this.browser = new Browser();
+			this.browser.deleteCookies();
+		})
+
+		before(function(done) {
+			this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html',function(){
+	    		setTimeout(done, 1000); //wait for postmessage
+	    	});
+	  	});
+	  	before(function(done) {
+	  		//open new tab with alternate domain name (that loads same shared iframe)
+	  		this.browser.open()
+	  		this.browser.visit('http://'+HTML_DOMAIN_2+'/test_page.html#xdomain_only',function(){
+	    		setTimeout(done, 1000); //wait for postmessage
+	    	});
+	  	});
+
+	  	it('get/set cookie, local cookie set for domain 2 only and iframe cookie set',function(){
+
+	  		//tab @ HTML_DOMAIN_2 should have been preset from visit to HTML_DOMAIN_1
+	  		expect( this.browser.window.location.href ).to.equal( 'http://'+HTML_DOMAIN_2+'/test_page.html#xdomain_only' );
+	  		expect( this.browser.queryAll('iframe[src*="http://'+IFRAME_DOMAIN+'/xdomain_cookie.html"]' ).length).to.equal(1);
+	  		//verify there was no existing/returned val from .get()
+			expect( this.browser.evaluate(JS_VAR_EXISTING_VAL) ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
+			//verify that final val was set correctly
+			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
+			this.browser.tabs.current.close();
+
+	  		//check the tab @ HTML_DOMAIN_1 (which was visited first)
+	  		expect( this.browser.window.location.href ).to.equal( 'http://'+HTML_DOMAIN_1+'/test_page.html' );
+			expect( this.browser.queryAll('iframe[src*="http://'+IFRAME_DOMAIN+'/xdomain_cookie.html"]' ).length).to.equal(1);
+			//verify there was no existing/returned val from .get() since this page was visitied first and local cookie was ignored
+			expect( this.browser.evaluate(JS_VAR_EXISTING_VAL) ).to.equal( null );
+			//verify that final val was set correctly
+			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
+
+			//check cookie values (verify local cookie for domain 1 and not for domain 2)
+			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			expect( local_cookie1 ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
+			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/' });
+			expect( local_cookie2 ).to.equal( null );
+			
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			expect( iframe_cookie ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
+			this.browser.tabs.current.close();
+		});
+	});
+
+	describe('Across multiple domains, xdomain_only on both local cookie set on domain 1', function() {
+		
+		var TEMP_NEWVAL = 'new_val';
+
+		before(function(){
+			this.browser = new Browser();
+			this.browser.deleteCookies();
+	    	var cookie_data = { name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', value: "ignored", expires:new Date((new Date().getTime())+(1000*60*10))};
+	    	this.browser.setCookie(cookie_data);
+		})
+
+		before(function(done) {
+			this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html#xdomain_only',function(){
+	    		setTimeout(done, 1000); //wait for postmessage
+	    	});
+	  	});
+	  	before(function(done) {
+	  		//open new tab with alternate domain name (that loads same shared iframe)
+	  		this.browser.open()
+	  		this.browser.visit('http://'+HTML_DOMAIN_2+'/test_page.html#xdomain_only',function(){
+	    		setTimeout(done, 1000); //wait for postmessage
+	    	});
+	  	});
+
+	  	it('get/set cookie, local cookie set but ignored, cookie set in iframe',function(){
+
+	  		//tab @ HTML_DOMAIN_2 should have been preset from visit to HTML_DOMAIN_1
+	  		expect( this.browser.window.location.href ).to.equal( 'http://'+HTML_DOMAIN_2+'/test_page.html#xdomain_only' );
+	  		expect( this.browser.queryAll('iframe[src*="http://'+IFRAME_DOMAIN+'/xdomain_cookie.html"]' ).length).to.equal(1);
+	  		//verify there was no existing/returned val from .get()
+			expect( this.browser.evaluate(JS_VAR_EXISTING_VAL) ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
+			//verify that final val was set correctly
+			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
+			this.browser.tabs.current.close();
+
+	  		//check the tab @ HTML_DOMAIN_1 (which was visited first)
+	  		expect( this.browser.window.location.href ).to.equal( 'http://'+HTML_DOMAIN_1+'/test_page.html#xdomain_only' );
+			expect( this.browser.queryAll('iframe[src*="http://'+IFRAME_DOMAIN+'/xdomain_cookie.html"]' ).length).to.equal(1);
+			//verify there was no existing/returned val from .get() since this page was visitied first and local cookie was ignored
+			expect( this.browser.evaluate(JS_VAR_EXISTING_VAL) ).to.equal( null );
+			//verify that final val was set correctly
+			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
+
+			//check cookie values (verify no local cookie for either domain)
+			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			expect( local_cookie1 ).to.equal( "ignored" );
+			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/' });
+			expect( local_cookie2 ).to.equal( null );
+			
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			expect( iframe_cookie ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
+			this.browser.tabs.current.close();
+		});
+	});
+
   	describe('Single domain, xdomain_only cookie', function(){
 
   		before(function(){
@@ -469,9 +577,6 @@ describe("Iframe shared cookie",function(){
 
 		before(function( done ){
 			this.browser = new Browser();
-			this.browser.on('error',function(err){
-				console.log("BROWSER ERROR",err);
-			});
 			this.browser.deleteCookies();
 			var _browser = this.browser;
 			this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html',function(){
