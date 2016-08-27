@@ -1,5 +1,5 @@
 
-##Cross-Domain Cookie Library
+#Cross-Domain Cookie Library
 
 This library is intended for cases where you have scripts running on different domains (i.e. domain-a.com, domain-b.com) that need to be able to set/share a cookie value across those domains. A few example use cases would be a third-party script that wants to set/share a user identifier across both domains, or a company that wants to track if a user signed up for a newsletter across both their main website and blog that resides on a different TLD.
 
@@ -7,7 +7,7 @@ The library leverages 2 files to achieve this - a javascript file you load/run o
 
 Authored by *Authored by* [Evan Carothers](https://github.com/ecaroth) @ [Contently](http://www.contently.com)
 
-Read the backstory and usage details at on the Building Contently Blog entry [Tracking people across multiple domains — when cookies just aren’t enough](https://medium.com/building-contently/tracking-people-across-multiple-domains-when-cookies-just-arent-enough-b270cc95beb1)
+Read the backstory and implementation details on the Building Contently Blog entry [Tracking people across multiple domains — when cookies just aren’t enough](https://medium.com/building-contently/tracking-people-across-multiple-domains-when-cookies-just-arent-enough-b270cc95beb1)
 
 Usage
 ------
@@ -38,35 +38,51 @@ This script should work in all modern desktop and mobile browsers that support t
 API
 ------
 
-##### xDomainIframe( iframe_domain, namespace, xdomain_only )
-Create a new instance of the xDomainIframe object that creates the iframe in the page and is ready for usage
+### xDomainIframe( iframe_domain, namespace, xdomain_only )
+> Create a new instance of the xDomainIframe object that creates the iframe in the page and is ready for usage
 
-`iframe_domain` (string, required) the domain, and optional path, where the iframe html script should be loaded from - NOTE should match the protocol/host/port of where the JS script is loaded from
+> `iframe_domain` _(string, required)_ the domain, and optional path, where the iframe html script should be loaded from - NOTE should match the protocol/host/port of where the JS script is loaded from
 
-`namespace` (string,optional) a namespace to use for postMessage passing - prevents collission if you are running multiple instances of this lib on the page... usually not needed
+> `namespace` _(string,optional)_ a namespace to use for postMessage passing - prevents collission if you are running multiple instances of this lib on the page... usually not needed
 
-`xdomain_only` (boolean, optional, default false) if the cookie should _only_ be set on the xdomain site, not locally.. meaning that the xdomain version acts as the source of truth for the cookie value and eliminates local caching. _PLEASE NOTE_ that this flag can provide specific intended behavior for different use cases. See the _Cross Domain ONLY Cookies_ section further down the readme for more info
+> `xdomain_only` _(boolean, optional, default false)_ if the cookie should _only_ be set on the xdomain site, not locally.. meaning that the xdomain version acts as the source of truth for the cookie value and eliminates local caching. _PLEASE NOTE_ that this flag can provide specific intended behavior for different use cases. See the _Cross Domain ONLY Cookies_ section further down the readme for more info
+
+> ```javascript
+> //create instance of xDomainIframe with local cookie caching
+> var xd_cookie = xDomainIframe( "//my.trusted-site.com", "my.namespace" );
+> 
+> //create instance of xDomainIframe that uses xdomain_only cookies
+> var xd_cookie = xDomainIframe( "//my.trusted-site.com", "my.namespace", true );
+> ```
+
+###.set( cookie_name, cookie_value, expires_days )
+> Set the value of the xdomain (& local) cookie
+
+> `cookie_name` _(string, required)_ the name of the cookie (both for local domain & iframe domain)
+
+> `cookie_value` _(string/int/float/obj, required)_ the value of the cookie that we wish to set, get's JSON encoded & serialized
+
+> `expires_days` _(int, optional)_ # of days to use for setting cookie expiration (default is 30)
+
+> ```javascript
+> my_xdc_instance.set( 'my_cookie', JSON.stringify({foo:"bar"}), 15 );
+> ```
 
 
-#####.set( cookie_name, cookie_value, expires_days )
-Set the value of the xdomain (& local) cookie
+###.get( cookie_name, callback, expires_days )
+> Get the value of the xdomain (& local) cookie with complete callback. _NOTE: this function also re-ups the xdomain cookie as if it was being re-set with .set()_
 
-`cookie_name` (string, required) the name of the cookie (both for local domain & iframe domain)
+> `cookie_name` _(string, required)_ the name of the cookie (both for local domain & iframe domain)
 
-`cookie_value` (string/int/float/obj, required) the value of the cookie that we wish to set, get's JSON encoded & serialized
+> `callback` _(function, required)_ function that is called upon retreival of iframe cookie - takes 1 arg, which is the cookie value (if present)
 
-`expires_days` (int, optional) # of days to use for setting cookie expiration (default is 30)
+> `expires_days` _(int, optional)_ # of days to use for setting/re-upping cookie expiration (default is 30)
 
-
-#####.get( cookie_name, callback, expires_days )
-Get the value of the xdomain (& local) cookie with complete callback. _NOTE: this function also re-ups the xdomain cookie as if it was being re-set with .set()_
-
-`cookie_name` (string, required) the name of the cookie (both for local domain & iframe domain)
-
-`callback` (function, required) function that is called upon retreival of iframe cookie - takes 1 arg, which is the cookie value (if present)
-
-`expires_days` (int, optional) # of days to use for setting/re-upping cookie expiration (default is 30)
-
+> ```javascript
+> my_xdc_instance.get( 'my_cookie', function( val ){
+> 	  console.log("Current value of xdomain cookie 'my_cookie'", val );
+> });
+> ```
 
 Cross Domain ONLY Cookies
 ------
