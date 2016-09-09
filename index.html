@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Xdomain-cookies by contently</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Xdomain-cookies</h1>
+      <h2 class="project-tagline">A JS lib that provides a mechanism to get/set cookies that can be shared across domains</h2>
+      <a href="https://github.com/contently/xdomain-cookies" class="btn">View on GitHub</a>
+      <a href="https://github.com/contently/xdomain-cookies/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/contently/xdomain-cookies/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="cross-domain-cookie-library" class="anchor" href="#cross-domain-cookie-library" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Cross-Domain Cookie Library</h1>
+
+<p>This library is intended for cases where you have scripts running on different domains (i.e. domain-a.com, domain-b.com) that need to be able to set/share a cookie value across those domains. A few example use cases would be a third-party script that wants to set/share a user identifier across both domains, or a company that wants to track if a user signed up for a newsletter across both their main website and blog that resides on a different TLD.</p>
+
+<p>The library leverages 2 files to achieve this - a javascript file you load/run on the page, and an HTML file that gets loaded onto that same page by the JS file. The JS &amp; HTML files both must be served from the same domain/location (such as an s3 bucket). They leverage postMessage across the same/trusted domain to communicate and set the cookie on that domain, which can then be read/written by the same script run on any other domain you give it access to.</p>
+
+<p>Authored by <em>Authored by</em> <a href="https://github.com/ecaroth">Evan Carothers</a> @ <a href="http://www.contently.com">Contently</a></p>
+
+<p>Read the backstory and implementation details on the Building Contently Blog entry <a href="https://medium.com/building-contently/tracking-people-across-multiple-domains-when-cookies-just-arent-enough-b270cc95beb1">Tracking people across multiple domains — when cookies just aren’t enough</a></p>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>Simply include the script on any page where it's needed, create a new instance of xDomainCookie, and leverage the get/set functions:</p>
+
+<div class="highlight highlight-text-html-basic"><pre>&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">"</span>//my.s3bucket.com/xdomain_cookie.js<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+<span class="pl-s1">&lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">    <span class="pl-k">var</span> xd_cookie <span class="pl-k">=</span> <span class="pl-en">xDomainCookie</span>( <span class="pl-s"><span class="pl-pds">'</span>//my.s3bucket.com<span class="pl-pds">'</span></span> );</span>
+<span class="pl-s1">    <span class="pl-smi">xd_cookie</span>.<span class="pl-c1">get</span>( <span class="pl-s"><span class="pl-pds">'</span>cookie_name<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">cookie_val</span>){</span>
+<span class="pl-s1">        <span class="pl-c">//cookie val will contain value of cookie as fetched from local val (if present) else from iframe (if set), else null</span></span>
+<span class="pl-s1">        <span class="pl-k">if</span>(<span class="pl-k">!</span>cookie_val){</span>
+<span class="pl-s1">            <span class="pl-k">var</span> new_val <span class="pl-k">=</span> <span class="pl-en">get_what_value_should_be</span>();</span>
+<span class="pl-s1">            <span class="pl-smi">xd_cookie</span>.<span class="pl-c1">set</span>( <span class="pl-s"><span class="pl-pds">'</span>cookie_name<span class="pl-pds">'</span></span>, new_val );</span>
+<span class="pl-s1">        }</span>
+<span class="pl-s1">    });</span>
+<span class="pl-s1">&lt;/<span class="pl-ent">script</span>&gt;</span></pre></div>
+
+<h2>
+<a id="usage-notes" class="anchor" href="#usage-notes" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage Notes</h2>
+
+<p><em>Please Note</em> that it's important for the <code>xdomain_cookie.js</code> file to be served from the same domain <em>and</em> protocol as the path passed in for the iframe creation (when creating <code>xDomainCookie</code>). You can setup the script to use whichever page the protocol of the main window is using by specifying <code>//</code> as the protocol prefix (instead of explicit <code>https://</code> or <code>http://</code>, assuming the webserver hosting the <code>xdomain_cookie.html</code> file supports that procolol). It's also OK to serve both the script and iframe path over HTTPS in all instances, regardless of if the main page is loaded over HTTPS.</p>
+
+<p>This script should work in all modern desktop and mobile browsers that support the postMessage API (IE 8+, Chrome, FF, etc).</p>
+
+<h2>
+<a id="api" class="anchor" href="#api" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>API</h2>
+
+<h3>
+<a id="xdomainiframe-iframe_domain-namespace-xdomain_only-" class="anchor" href="#xdomainiframe-iframe_domain-namespace-xdomain_only-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>xDomainIframe( iframe_domain, namespace, xdomain_only )</h3>
+
+<blockquote>
+<p>Create a new instance of the xDomainIframe object that creates the iframe in the page and is ready for usage</p>
+
+<p><code>iframe_domain</code> <em>(string, required)</em> the domain, and optional path, where the iframe html script should be loaded from - NOTE should match the protocol/host/port of where the JS script is loaded from</p>
+
+<p><code>namespace</code> <em>(string,optional)</em> a namespace to use for postMessage passing - prevents collission if you are running multiple instances of this lib on the page... usually not needed</p>
+
+<p><code>xdomain_only</code> <em>(boolean, optional, default false)</em> if the cookie should <em>only</em> be set on the xdomain site, not locally.. meaning that the xdomain version acts as the source of truth for the cookie value and eliminates local caching. <em>PLEASE NOTE</em> that this flag can provide specific intended behavior for different use cases. See the <em>Cross Domain ONLY Cookies</em> section further down the readme for more info</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-c">//create instance of xDomainIframe with local cookie caching</span>
+<span class="pl-k">var</span> xd_cookie <span class="pl-k">=</span> <span class="pl-en">xDomainIframe</span>( <span class="pl-s"><span class="pl-pds">"</span>//my.trusted-site.com<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>my.namespace<span class="pl-pds">"</span></span> );
+
+<span class="pl-c">//create instance of xDomainIframe that uses xdomain_only cookies</span>
+<span class="pl-k">var</span> xd_cookie <span class="pl-k">=</span> <span class="pl-en">xDomainIframe</span>( <span class="pl-s"><span class="pl-pds">"</span>//my.trusted-site.com<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>my.namespace<span class="pl-pds">"</span></span>, <span class="pl-c1">true</span> );</pre></div>
+</blockquote>
+
+<h3>
+<a id="set-cookie_name-cookie_value-expires_days-" class="anchor" href="#set-cookie_name-cookie_value-expires_days-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>.set( cookie_name, cookie_value, expires_days )</h3>
+
+<blockquote>
+<p>Set the value of the xdomain (&amp; local) cookie</p>
+
+<p><code>cookie_name</code> <em>(string, required)</em> the name of the cookie (both for local domain &amp; iframe domain)</p>
+
+<p><code>cookie_value</code> <em>(string/int/float/obj, required)</em> the value of the cookie that we wish to set, get's JSON encoded &amp; serialized</p>
+
+<p><code>expires_days</code> <em>(int, optional)</em> # of days to use for setting cookie expiration (default is 30)</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">my_xdc_instance</span>.<span class="pl-c1">set</span>( <span class="pl-s"><span class="pl-pds">'</span>my_cookie<span class="pl-pds">'</span></span>, <span class="pl-c1">JSON</span>.<span class="pl-en">stringify</span>({foo<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>bar<span class="pl-pds">"</span></span>}), <span class="pl-c1">15</span> );</pre></div>
+</blockquote>
+
+<h3>
+<a id="get-cookie_name-callback-expires_days-" class="anchor" href="#get-cookie_name-callback-expires_days-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>.get( cookie_name, callback, expires_days )</h3>
+
+<blockquote>
+<p>Get the value of the xdomain (&amp; local) cookie with complete callback. <em>NOTE: this function also re-ups the xdomain cookie as if it was being re-set with .set()</em></p>
+
+<p><code>cookie_name</code> <em>(string, required)</em> the name of the cookie (both for local domain &amp; iframe domain)</p>
+
+<p><code>callback</code> <em>(function, required)</em> function that is called upon retreival of iframe cookie - takes 1 arg, which is the cookie value (if present)</p>
+
+<p><code>expires_days</code> <em>(int, optional)</em> # of days to use for setting/re-upping cookie expiration (default is 30)</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">my_xdc_instance</span>.<span class="pl-c1">get</span>( <span class="pl-s"><span class="pl-pds">'</span>my_cookie<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>( <span class="pl-smi">val</span> ){
+    <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span>Current value of xdomain cookie 'my_cookie'<span class="pl-pds">"</span></span>, val );
+});</pre></div>
+</blockquote>
+
+<h2>
+<a id="cross-domain-only-cookies" class="anchor" href="#cross-domain-only-cookies" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Cross Domain ONLY Cookies</h2>
+
+<p>By default the <code>xDomainCookies</code> class is configured to set and use a local cookie as a caching mechanism to allow the callback for <code>.get()</code> to return as fast as possible. This is based on the fact that you are setting a piece of information that <em>should not change</em> on any domains you are using the xDomainCookie on, as if you change the cookie from a single domain and it's cached locally at another domain, that local cache will prevent the updated value from being returned by the <code>get()</code> callback on that specific domain. </p>
+
+<p>For use cases where you are setting a cookie value that should not change (such as something simple like a user ID), allowing the local cookie cache to function is useful and ideal. If, however, you are using advanced data types (such as a serialzed JSON object that has a property that can be updated from multiple domains, and needs to always have the most updated values accessible), then you should pass in <code>true</code> for the <em>xdomain_only</em> param when creating a new <code>xDomainIframe</code> instance. This means that the local cookie cache isn't used, and the iframe must fully lead before the callback to <code>get()</code> will fire, but will guarantee that any interaction with the cookie data will always use up-to-date values.</p>
+
+<h2>
+<a id="testing" class="anchor" href="#testing" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Testing</h2>
+
+<p>There's a full test suite that leverages zombie/connect to mock &amp; test the library behavior across multiple domains in multiple different situations. There is also a pre-build development setup to load/test in local environments in the library. Both of these rely on npm packages, so be sure to do an <code>npm install</code> in the root dir before running.</p>
+
+<h5>
+<a id="test-suite" class="anchor" href="#test-suite" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Test suite</h5>
+
+<pre><code>npm test
+</code></pre>
+
+<h5>
+<a id="dev-server" class="anchor" href="#dev-server" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Dev Server</h5>
+
+<p>The dev server runs on localhost:3001. Once running you can map whatever hosts to 127.0.0.1 and load the JS in running local pages from {{myhost}}:3001/xdomain_cookie.js.</p>
+
+<pre><code>npm run dev
+</code></pre>
+
+<p>It is also pre-configurd with an example scenario that shows usage across domains. It requires you to map the following domains to 127.0.0.1 in your hosts file: shared_cookie_test.com, shared_cookie_test2.com, and shared_cookie_iframe.com</p>
+
+<p>You can then see the example working by visiting http://shared_cookie_test.com:3001/test_page.html and shared_cookie_test2.com/test_page.html - take a look at the console output to see cookie behavior.</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/contently/xdomain-cookies">Xdomain-cookies</a> is maintained by <a href="https://github.com/contently">contently</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
