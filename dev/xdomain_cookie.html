@@ -12,14 +12,13 @@
 
 			//basic cookie getter function (returns object of all cookies key/val)
 			function _get_local_cookies(){
-				var ca = document.cookie.split(';'),
+				var cstring = document.cookie.split(';'),
 					cookies = {};
-			    for(var i=0; i<ca.length; i++) {
-			        var c = ca[i].trim(),
-			        	vals = c.split("=");
-			        if(!vals[0]) continue;
+				cstring.forEach(function(cs){
+					var vals = cs.trim().split("=");
+					if(!vals[0]) return;
 			        cookies[vals[0]] = decodeURIComponent(vals[1]);
-			    }
+				});
 			    return cookies;
 			}
 

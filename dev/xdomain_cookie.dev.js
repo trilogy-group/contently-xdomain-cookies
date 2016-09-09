@@ -1,5 +1,3 @@
-/* Version 1.0.5 xdomain-cookies (http://contently.github.io/xdomain-cookies/) from Contently (https://github.com/contently) */
-
 (function(exports) {
 	"use strict";
 	
@@ -118,7 +116,6 @@
 
 			//set local cached value
 			_xdomain_cookie_data[cookie_name] = cookie_value;
-
 		}
 
 		//function to call after instantiation to sync a cookie, supplying a cookie name, value to write if it does NOT exist, expires 

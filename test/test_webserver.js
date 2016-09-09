@@ -5,7 +5,7 @@ console.log(__dirname);
 
 var app = connect();
 
-app.use(serveStatic(__dirname+"/../src"));
+app.use(serveStatic(__dirname+"/../dev"));
 app.use(serveStatic(__dirname+"/../test"));
 
 app.use(function(req, res, next){

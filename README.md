@@ -15,7 +15,7 @@ Usage
 Simply include the script on any page where it's needed, create a new instance of xDomainCookie, and leverage the get/set functions:
 
 ```html
-<script src="//my.s3bucket.com/xdomain_cookie.js"></script>
+<script src="//my.s3bucket.com/xdomain_cookie.min.js"></script>
 <script>
 	var xd_cookie = xDomainCookie( '//my.s3bucket.com' );
 	xd_cookie.get( 'cookie_name', function(cookie_val){
@@ -31,7 +31,7 @@ Simply include the script on any page where it's needed, create a new instance o
 Usage Notes
 ------
 
-_Please Note_ that it's important for the `xdomain_cookie.js` file to be served from the same domain _and_ protocol as the path passed in for the iframe creation (when creating `xDomainCookie`). You can setup the script to use whichever page the protocol of the main window is using by specifying `//` as the protocol prefix (instead of explicit `https://` or `http://`, assuming the webserver hosting the `xdomain_cookie.html` file supports that procolol). It's also OK to serve both the script and iframe path over HTTPS in all instances, regardless of if the main page is loaded over HTTPS.
+_Please Note_ that it's important for the `xdomain_cookie.min.js` file to be served from the same domain _and_ protocol as the path passed in for the iframe creation (when creating `xDomainCookie`). You can setup the script to use whichever page the protocol of the main window is using by specifying `//` as the protocol prefix (instead of explicit `https://` or `http://`, assuming the webserver hosting the `xdomain_cookie.html` file supports that procolol). It's also OK to serve both the script and iframe path over HTTPS in all instances, regardless of if the main page is loaded over HTTPS.
 
 This script should work in all modern desktop and mobile browsers that support the postMessage API (IE 8+, Chrome, FF, etc).
 
@@ -102,8 +102,8 @@ There's a full test suite that leverages zombie/connect to mock & test the libra
 npm test
 ```
 
-##### Dev Server
-The dev server runs on localhost:3001. Once running you can map whatever hosts to 127.0.0.1 and load the JS in running local pages from {{myhost}}:3001/xdomain_cookie.js.
+##### Dev Server & Development
+The dev server runs on localhost:3001. Once running you can map whatever hosts to 127.0.0.1 and load the JS in running local pages from {{myhost}}:3001/xdomain_cookie.dev.js.
 ```
 npm run dev
 ```
@@ -111,3 +111,5 @@ npm run dev
 It is also pre-configurd with an example scenario that shows usage across domains. It requires you to map the following domains to 127.0.0.1 in your hosts file: shared_cookie_test.com, shared_cookie_test2.com, and shared_cookie_iframe.com
 
 You can then see the example working by visiting http://shared_cookie_test.com:3001/test_page.html and shared_cookie_test2.com/test_page.html - take a look at the console output to see cookie behavior.
+
+When developing locally you can lint/test/build the library by running `gulp build`
