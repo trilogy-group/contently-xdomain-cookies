@@ -1,9 +1,9 @@
 
 #Cross-Domain Cookie Library
 
-This library is intended for cases where you have scripts running on different domains (i.e. domain-a.com, domain-b.com) that need to be able to set/share a cookie value across those domains. A few example use cases would be a third-party script that wants to set/share a user identifier across both domains, or a company that wants to track if a user signed up for a newsletter across both their main website and blog that resides on a different TLD.
+This library is intended for cases where you have scripts running on different domains (i.e. domain-a.com, domain-b.com) that need to be able to set/share a cookie value across those domains. A few example use cases would be a third-party script that wants to set/share a user identifier across both domains, or a company that wants to track if a user signed up for a newsletter across both their main website and blog that resides on a different TLD. This library also offers a way of writing data to a cookie from a third-party script _even if_ third-party cookies are disabled or blocked.
 
-The library leverages 2 files to achieve this - a javascript file you load/run on the page, and an HTML file that gets loaded onto that same page by the JS file. The JS & HTML files both must be served from the same domain/location (such as an s3 bucket). They leverage postMessage across the same/trusted domain to communicate and set the cookie on that domain, which can then be read/written by the same script run on any other domain you give it access to.
+The library leverages 2 files to achieve this - a javascript file you load/run on the page, and an HTML file that gets loaded onto that same page in an iframe by the JS file. The JS & HTML files both must be served from the same domain/location (such as an s3 bucket). The cookies are pushed to the iframe (via postMessage), written as first-party cookies on the remote trusted domain, and are made available for reading/writing locally via a convenient API.
 
 Authored by *Authored by* [Evan Carothers](https://github.com/ecaroth) @ [Contently](http://www.contently.com)
 

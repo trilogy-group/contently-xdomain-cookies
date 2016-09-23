@@ -188,22 +188,3 @@
 	
 	exports.xDomainCookie = xDomainCookie;
 })(this);
-
-/*
-//EXAMPLE OF USAGE
-
-var shared_cookie = xDomainSharedCookie( 'https://shared.contently.com', 'contently.ifsc' );
-var _temp_id = generate_new_user_id_for_use_if_cookie_not_set();
-
-shared_cookie.create(
-	'whatever_cookie_name', //cookie name
-	 _temp_id,	//cookie value to use if not set
-	(1000*60*60*24*30), // expiration future milliseconds for cookei (30 days here)
-	function( cookie_val ){
-		//callback for cookie fetch finalization
-		//NOTE - cookie will be read/set locally regardless, but success of setting cross-domain version is first param for callback
-		_set_user_cookie_id_for_etl_pipeline( cookie_val );
-	}
-);
-
-*/
