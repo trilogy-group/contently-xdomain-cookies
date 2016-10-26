@@ -6,7 +6,10 @@
 <script src="xdomain_cookie.dev.js"></script>
 <script>
 
-	var js_errors = [];
+	var debug = false,
+		js_errors = [],
+		is_secure = window.location.protocol==='https:';
+
 	window.onerror = function(message, source, lineno, colno, error) {
 		var err = {message:message, source:source, lineno:lineno, colno:colno, error:error};
 		js_errors.push(err);
@@ -27,29 +30,29 @@
 			is_dev = false;
 	}else{
 		//request is from dev box
-		var iframe_url = 'http://shared_cookie_iframe.com:3001',
+		var iframe_url = is_secure ? 'https://shared_cookie_iframe.com:3003': 'http://shared_cookie_iframe.com:3001',
 			cookie_test_val = 'set_from:'+window.location.host,
 			is_dev = true;
 	}
 
-	var xd_cookie = xDomainCookie( iframe_url, 'test.xdsc', xdomain_only );
+	var xd_cookie = xDomainCookie( iframe_url, 'test.xdsc', xdomain_only, 1000, is_secure, debug );
 
 	xd_cookie.get( 'test_cookie', function( cookie_val ){
 		
-		if(is_dev) console.log("COOKIE VAL RETURN: ",cookie_val);
+		if(is_dev || debug) console.log("_page_ COOKIE VAL RETURN: ",cookie_val);
 		
 		existing_cookie_val = cookie_val;
 		
 		if(!cookie_val){
 
-			if(is_dev) console.log("SETTING EMPTY COOKIE", cookie_test_val);
+			if(is_dev || debug) console.log("_page_ SETTING EMPTY COOKIE", cookie_test_val);
 			
 			xd_cookie.set( 'test_cookie', cookie_test_val, 30, xdomain_only );
 			
 			//get again to verify that it was set
 			xd_cookie.get( 'test_cookie', function(cookie_val){
 				
-				if(is_dev) console.log("COOKIE VAL RETURN AFTER SET:", cookie_val);
+				if(is_dev || debug) console.log("_page_ COOKIE VAL RETURN AFTER SET:", cookie_val);
 				
 				final_cookie_val = cookie_val;
 			}, 30, xdomain_only );

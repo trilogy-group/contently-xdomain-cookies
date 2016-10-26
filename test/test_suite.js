@@ -15,12 +15,12 @@ const 	TEST_COOKIE_NAME = 'test_cookie',
 		EXPECTED_SET_COOKIE_VAL = 'preset1234',
 		JS_VAR_EXISTING_VAL = 'existing_cookie_val',
 		JS_VAR_FINAL_VAL = 'final_cookie_val',
-		JS_CAPTURED_ERRORS = 'js_errors';
+		JS_CAPTURED_ERRORS = 'js_errors',
+		POSTMESSAGE_WAIT_MS = 50;
 
-//register needed domains to route throug localhost w/ zombie
-Browser.localhost(HTML_DOMAIN_1,3002);
-Browser.localhost(HTML_DOMAIN_2,3002);
-Browser.localhost(IFRAME_DOMAIN,3002);
+Browser.localhost(HTML_DOMAIN_1,3005);
+Browser.localhost(HTML_DOMAIN_2,3005);
+Browser.localhost(IFRAME_DOMAIN,3005);
 
 Browser.extend(function(browser) {
   browser.on('console', function(level, message) {
@@ -31,16 +31,18 @@ Browser.extend(function(browser) {
   });
 });
 
-
-describe("Iframe shared cookie",function(){
+describe("Iframe shared cookie (http)", function(){
 	this.timeout(5000);
 
 	before(function() {
-		this.server = app.listen(3002, 'localhost' );
+		this.server = app.startHttpApp(3005);
 	});
 	after(function(done) {
     	this.server.close(done);
   	});
+
+	//TODO - test for secure cookies!
+
 
 	describe('Across multiple domains, xdomain_only on domain 2 only, no cookies set initially', function() {
 		
@@ -52,19 +54,19 @@ describe("Iframe shared cookie",function(){
 		})
 
 		before(function(done) {
-			this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+			this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html', function(){
+				setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 	  	before(function(done) {
 	  		//open new tab with alternate domain name (that loads same shared iframe)
-	  		this.browser.open()
-	  		this.browser.visit('http://'+HTML_DOMAIN_2+'/test_page.html#xdomain_only',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	  		this.browser.open();
+	  		this.browser.visit('http://'+HTML_DOMAIN_2+'/test_page.html#xdomain_only', function(){
+	  			setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 
-	  	it('get/set cookie, local cookie set for domain 2 only and iframe cookie set',function(){
+	  	it('get/set cookie, local cookie set for domain 2 only and iframe cookie set', function(){
 
 	  		//tab @ HTML_DOMAIN_2 should have been preset from visit to HTML_DOMAIN_1
 	  		expect( this.browser.window.location.href ).to.equal( 'http://'+HTML_DOMAIN_2+'/test_page.html#xdomain_only' );
@@ -84,12 +86,12 @@ describe("Iframe shared cookie",function(){
 			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
 
 			//check cookie values (verify local cookie for domain 1 and not for domain 2)
-			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', secure: false});
 			expect( local_cookie1 ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
-			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/' });
+			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/', secure: false });
 			expect( local_cookie2 ).to.equal( null );
 			
-			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', secure: false });
 			expect( iframe_cookie ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
 			this.browser.tabs.current.close();
 		});
@@ -108,14 +110,14 @@ describe("Iframe shared cookie",function(){
 
 		before(function(done) {
 			this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html#xdomain_only',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 	  	before(function(done) {
 	  		//open new tab with alternate domain name (that loads same shared iframe)
 	  		this.browser.open()
 	  		this.browser.visit('http://'+HTML_DOMAIN_2+'/test_page.html#xdomain_only',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 
@@ -139,12 +141,12 @@ describe("Iframe shared cookie",function(){
 			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
 
 			//check cookie values (verify no local cookie for either domain)
-			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', secure: false });
 			expect( local_cookie1 ).to.equal( "ignored" );
-			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/' });
+			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/', secure: false });
 			expect( local_cookie2 ).to.equal( null );
 			
-			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', secure: false });
 			expect( iframe_cookie ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
 			this.browser.tabs.current.close();
 		});
@@ -159,7 +161,7 @@ describe("Iframe shared cookie",function(){
 
 		before(function(done) {
 	    	this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html#xdomain_only',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 
@@ -184,24 +186,25 @@ describe("Iframe shared cookie",function(){
 		var TEMP_NEWVAL = 'new_val';
 
 		before(function(){
+			var expires = new Date((new Date().getTime())+(1000*60*10));
 			this.browser = new Browser();
 			this.browser.deleteCookies();
-			var cookie_data = { name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/', value: TEMP_NEWVAL, expires:new Date((new Date().getTime())+(1000*60*10))};
+			var cookie_data = { name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/', value: TEMP_NEWVAL, expires:expires, secure: false};
 	    	this.browser.setCookie(cookie_data);
-	    	var cookie_data2 = { name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', value: EXPECTED_SET_COOKIE_VAL, expires:new Date((new Date().getTime())+(1000*60*10))};
+	    	var cookie_data2 = { name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', value: EXPECTED_SET_COOKIE_VAL, expires:expires, secure: false};
 	    	this.browser.setCookie(cookie_data2);
 		})
 
 		before(function(done) {
 			this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 	  	before(function(done) {
 	  		//open new tab with alternate domain name (that loads same shared iframe)
 	  		this.browser.open()
 	  		this.browser.visit('http://'+HTML_DOMAIN_2+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 
@@ -225,11 +228,11 @@ describe("Iframe shared cookie",function(){
 			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_SET_COOKIE_VAL );
 
 			//now verify that all cookies are set
-			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', secure: false });
 			expect( local_cookie1 ).to.equal( EXPECTED_SET_COOKIE_VAL );
-			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/' });
+			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/', secure: false });
 			expect( local_cookie2 ).to.equal( TEMP_NEWVAL );
-			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', secure: false });
 			expect( iframe_cookie ).to.equal( TEMP_NEWVAL );
 			
 		});
@@ -243,20 +246,21 @@ describe("Iframe shared cookie",function(){
 		before(function(){
 			this.browser = new Browser();
 			this.browser.deleteCookies();
-			var cookie_data = { name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/', value: TEMP_NEWVAL, expires:new Date((new Date().getTime())+(1000*60*10))};
+			var expires = new Date((new Date().getTime())+(1000*60*10));
+			var cookie_data = { name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/', value: TEMP_NEWVAL, expires:expires, secure: false};
 	    	this.browser.setCookie(cookie_data);
 		})
 
 		before(function(done) {
 			this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 	  	before(function(done) {
 	  		//open new tab with alternate domain name (that loads same shared iframe)
 	  		this.browser.open()
 	  		this.browser.visit('http://'+HTML_DOMAIN_2+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 
@@ -280,11 +284,11 @@ describe("Iframe shared cookie",function(){
 			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
 
 			//now verify that all cookies are set
-			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', secure: false });
 			expect( local_cookie1 ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
-			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/' });
+			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/', secure: false });
 			expect( local_cookie2 ).to.equal( TEMP_NEWVAL );
-			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', secure: false });
 			expect( iframe_cookie ).to.equal( TEMP_NEWVAL );
 			
 		});
@@ -296,20 +300,21 @@ describe("Iframe shared cookie",function(){
 		before(function(){
 			this.browser = new Browser();
 			this.browser.deleteCookies();
-			var cookie_data = { name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', value: EXPECTED_SET_COOKIE_VAL, expires:new Date((new Date().getTime())+(1000*60*10))};
+			var expires = new Date((new Date().getTime())+(1000*60*10));
+			var cookie_data = { name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', value: EXPECTED_SET_COOKIE_VAL, expires:expires};
 	    	this.browser.setCookie(cookie_data);
 		})
 
 		before(function(done) {
 			this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 	  	before(function(done) {
 	  		//open new tab with alternate domain name (that loads same shared iframe)
 	  		this.browser.open()
 	  		this.browser.visit('http://'+HTML_DOMAIN_2+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 
@@ -333,11 +338,11 @@ describe("Iframe shared cookie",function(){
 			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_SET_COOKIE_VAL );
 
 			//now verify that all cookies are set
-			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', secure: false });
 			expect( local_cookie1 ).to.equal( EXPECTED_SET_COOKIE_VAL );
-			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/' });
+			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/', secure: false });
 			expect( local_cookie2 ).to.equal( EXPECTED_SET_COOKIE_VAL );
-			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', secure: false });
 			expect( iframe_cookie ).to.equal( EXPECTED_SET_COOKIE_VAL );
 			
 		});
@@ -349,20 +354,21 @@ describe("Iframe shared cookie",function(){
 		before(function(){
 			this.browser = new Browser();
 			this.browser.deleteCookies();
-			var cookie_data = { name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', value: EXPECTED_SET_COOKIE_VAL, expires:new Date((new Date().getTime())+(1000*60*10))};
+			var expires = new Date((new Date().getTime())+(1000*60*10));
+			var cookie_data = { name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', value: EXPECTED_SET_COOKIE_VAL, expires:expires, secure: false};
 	    	this.browser.setCookie(cookie_data);
 		})
 
 		before(function(done) {
 			this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 	  	before(function(done) {
 	  		//open new tab with alternate domain name (that loads same shared iframe)
 	  		this.browser.open()
 	  		this.browser.visit('http://'+HTML_DOMAIN_2+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 
@@ -386,11 +392,11 @@ describe("Iframe shared cookie",function(){
 			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_SET_COOKIE_VAL );
 
 			//now verify that all cookies are set
-			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', secure: false });
 			expect( local_cookie1 ).to.equal( EXPECTED_SET_COOKIE_VAL );
-			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/' });
+			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/', secure: false });
 			expect( local_cookie2 ).to.equal( EXPECTED_SET_COOKIE_VAL );
-			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', secure: false });
 			expect( iframe_cookie ).to.equal( EXPECTED_SET_COOKIE_VAL );
 			
 		});
@@ -406,14 +412,14 @@ describe("Iframe shared cookie",function(){
 
 		before(function(done) {
 			this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 	  	before(function(done) {
 	  		//open new tab with alternate domain name (that loads same shared iframe)
 	  		this.browser.open()
 	  		this.browser.visit('http://'+HTML_DOMAIN_2+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 
@@ -437,11 +443,11 @@ describe("Iframe shared cookie",function(){
 			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
 
 			//now verify that all cookies are set
-			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			var local_cookie1 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', secure: false });
 			expect( local_cookie1 ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
-			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/' });
+			var local_cookie2 = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_2, path: '/', secure: false });
 			expect( local_cookie2 ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
-			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', secure: false });
 			expect( iframe_cookie ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
 			
 		});
@@ -458,7 +464,7 @@ describe("Iframe shared cookie",function(){
 
 		before(function(done) {
 	    	this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 
@@ -469,9 +475,9 @@ describe("Iframe shared cookie",function(){
 			//verify that final val was set correctly
 			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
 			//check cookie values
-			var local_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			var local_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', secure: false });
 			expect( local_cookie ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
-			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', secure: false });
 			expect( iframe_cookie ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
 		});
 
@@ -486,10 +492,11 @@ describe("Iframe shared cookie",function(){
 		})
 
 		before(function(done) {
-	    	var cookie_data = { name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', value: EXPECTED_SET_COOKIE_VAL, expires:new Date((new Date().getTime())+(1000*60*10))};
+			var expires = new Date((new Date().getTime())+(1000*60*10));
+	    	var cookie_data = { name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', value: EXPECTED_SET_COOKIE_VAL, expires:expires, secure: false};
 	    	this.browser.setCookie(cookie_data);
 	    	this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 
@@ -500,9 +507,9 @@ describe("Iframe shared cookie",function(){
 			//verify that final val was set correctly
 			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_SET_COOKIE_VAL );
 			//check cookie values
-			var local_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			var local_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', secure: false });
 			expect( local_cookie ).to.equal( EXPECTED_SET_COOKIE_VAL );
-			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', secure: false });
 			expect( iframe_cookie ).to.equal( EXPECTED_SET_COOKIE_VAL );
 		});
 
@@ -517,10 +524,11 @@ describe("Iframe shared cookie",function(){
 		})
 
 		before(function(done) {
-	    	var cookie_data = { name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', value: EXPECTED_SET_COOKIE_VAL, expires:new Date((new Date().getTime())+(1000*60*10))};
+			var expires = new Date((new Date().getTime())+(1000*60*10));
+	    	var cookie_data = { name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', value: EXPECTED_SET_COOKIE_VAL, expires:expires, secure: false};
 	    	this.browser.setCookie(cookie_data);
 	    	this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 
@@ -531,9 +539,9 @@ describe("Iframe shared cookie",function(){
 			//verify that final val was set correctly
 			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_SET_COOKIE_VAL );
 			//check cookie values
-			var local_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			var local_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', secure: false });
 			expect( local_cookie ).to.equal( EXPECTED_SET_COOKIE_VAL );
-			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', secure: false });
 			expect( iframe_cookie ).to.equal( EXPECTED_SET_COOKIE_VAL );
 		});
 
@@ -548,12 +556,13 @@ describe("Iframe shared cookie",function(){
 		})
 
 		before(function(done) {
-	    	var cookie_data = { name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', value: EXPECTED_SET_COOKIE_VAL, expires:new Date((new Date().getTime())+(1000*60*10))};
+			var expires = new Date((new Date().getTime())+(1000*60*10));
+	    	var cookie_data = { name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', value: EXPECTED_SET_COOKIE_VAL, expires:expires, secure: false};
 	    	this.browser.setCookie(cookie_data);
-	    	var cookie_data2 = { name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', value: 'dont_use', expires:new Date((new Date().getTime())+(1000*60*10))};
+	    	var cookie_data2 = { name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', value: 'dont_use', expires:expires, secure: false};
 	    	this.browser.setCookie(cookie_data2);
 	    	this.browser.visit('http://'+HTML_DOMAIN_1+'/test_page.html',function(){
-	    		setTimeout(done, 1000); //wait for postmessage
+	    		setTimeout(done, POSTMESSAGE_WAIT_MS); //wait for postmessage
 	    	});
 	  	});
 
@@ -564,9 +573,9 @@ describe("Iframe shared cookie",function(){
 			//verify that final val was set correctly
 			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_SET_COOKIE_VAL );
 			//check cookie values
-			var local_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			var local_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', secure: false });
 			expect( local_cookie ).to.equal( EXPECTED_SET_COOKIE_VAL );
-			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', secure: false });
 			expect( iframe_cookie ).to.equal( EXPECTED_SET_COOKIE_VAL );
 		});
 
@@ -609,12 +618,11 @@ describe("Iframe shared cookie",function(){
 			//verify that final val was set correctly
 			expect( this.browser.evaluate(JS_VAR_FINAL_VAL) ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
 			//check cookie values
-			var local_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/' });
+			var local_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: HTML_DOMAIN_1, path: '/', secure: false });
 			expect( local_cookie ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
-			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/' });
+			var iframe_cookie = this.browser.getCookie({ name: TEST_COOKIE_NAME, domain: IFRAME_DOMAIN, path: '/', secure: false });
 			expect( iframe_cookie ).to.equal( EXPECTED_UNSET_COOKIE_VAL );
 			
 		});
-	})
-	
+	});
 });

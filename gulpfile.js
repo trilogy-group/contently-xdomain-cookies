@@ -6,7 +6,8 @@ const gulp = require('gulp'),
       mocha = require('gulp-mocha'),
       runSequence = require('run-sequence'),
       insert = require('gulp-insert'),
-      uglify = require('gulp-uglify');
+      uglify = require('gulp-uglify'),
+      argv = require('yargs').argv;
 
 const PACKAGE = require('./package.json');
 const ATTIBUTION = `/* Version ${PACKAGE.version} ${PACKAGE.name} (${PACKAGE.homepage}) from Contently (https://github.com/contently) */`+"\n\n";
@@ -51,15 +52,19 @@ gulp.task('lint', function(){
   		.pipe(jshint.reporter('fail'));
 });
 
+//NOTE - can pass in --test=<TEST_FILTER> flag to filter
 gulp.task('test', function(){
+  var mopts = {
+    reporter:'spec',
+    fullTrace: true
+  };
+  if('test' in argv) mopts['grep'] = argv.test;
+
 	return gulp.src('test/test_suite.js', {read:false} )
-		.pipe(mocha({
-	    	reporter:'spec',
-	      	fullTrace: true
-	    }))
-	  	.on("error", function(err) {
-	  		console.log(err.toString());
-	  		this.emit('end');
-	  		process.exit();
-	  	})
+		.pipe(mocha(mopts))
+  	.on("error", function(err) {
+  		console.log(err.toString());
+  		this.emit('end');
+  		process.exit();
+  	})
 });
