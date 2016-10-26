@@ -58,6 +58,10 @@
 	        	if(!('msg_type' in data) || data.msg_type !== 'xdsc_write') return; //data is not a xdomainc-cookie payload
 	        	if(!('namespace' in data) || data.namespace !== _namespace) return; //wrong namespace for msg
 
+	        	if(data.secure_only && window.location.protocol !== 'https:'){
+	        		console.error("xDomainCookie - ERROR, secure_only flag set but page is not loaded over HTTPS:");
+	        	}
+	        	
 	        	var expires_days = parseInt(data.expires_days,10);
 		        _set_local_cookie( data.cookie_name, data.cookie_val, expires_days, data.secure_only );
 		        //ping down to page again to update values of xdomain cookie data

@@ -21,10 +21,6 @@
 			_secure_only = !!secure_only,							//should cookies be written as HTTPS-only cookies
 			_debug = !!debug;
 
-		if(_secure_only && window.window.location.protocol !== 'https:'){
-			return console.error("xDomainCookie - ERROR, secure_only flag set but page is not loaded over HTTPS:");
-		}	
-
 		function _log(){
 			if(!_debug) return;
 			arguments[0] = ":XDC_PAGE: "+arguments[0];
