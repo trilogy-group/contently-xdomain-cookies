@@ -33,7 +33,7 @@
 			_log("_inbound_postmessage", event.origin, event.data);
 
 			var origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
-			if (origin !== iframe_path) return; //incoming message not from iframe
+			if (iframe_path.substr(0,origin.length) !== origin) return; //incoming message not from iframe
 			
 			if(typeof event.data !== 'string') return; //expected json string encoded payload
 			var data = null;
