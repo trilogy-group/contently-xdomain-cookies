@@ -1,9 +1,9 @@
-/* Version 1.0.5 xdomain-cookies (http://contently.github.io/xdomain-cookies/) from Contently (https://github.com/contently) */
+/* Version 1.0.6 xdomain-cookies (http://contently.github.io/xdomain-cookies/) from Contently (https://github.com/contently) */
 
 (function(exports) {
 	"use strict";
 	
-	var xDomainCookie = function( iframe_path, namespace, xdomain_only, iframe_load_timeout_ms ){
+	var xDomainCookie = function( iframe_path, namespace, xdomain_only, iframe_load_timeout_ms, secure_only, debug ){
 		//iframe_path = full TLD (and optional path) to location where iframe_shared_cookie.html is served from, and domain cookie will be set on
 		//namespace = namespace to use when identifying that postMessage calls incoming are for our use
 
@@ -17,10 +17,24 @@
 			_xdomain_cookie_data = {},								//shared cookie data set by the iframe after load/ready
 			_id = new Date().getTime(),								//identifier to use for iframe in case there are multiple on the page
 			_default_expires_days = 30,								//default expiration days for cookies when re-uppded
-			_xdomain_only = !!xdomain_only;							//should we ONLY use xdomain cookies (and avoid local cache)
+			_xdomain_only = !!xdomain_only,							//should we ONLY use xdomain cookies (and avoid local cache)
+			_secure_only = !!secure_only,							//should cookies be written as HTTPS-only cookies
+			_debug = !!debug;
+
+		if(_secure_only && window.window.location.protocol !== 'https:'){
+			return console.error("xDomainCookie - ERROR, secure_only flag set but page is not loaded over HTTPS:");
+		}	
+
+		function _log(){
+			if(!_debug) return;
+			arguments[0] = ":XDC_PAGE: "+arguments[0];
+			console.log.apply(console, arguments);
+		}
 
 		//function called on inbound post message - filter/verify that message is for our consumption, then set ready data an fire callbacks
 		function _inbound_postmessage( event ){
+
+			_log("_inbound_postmessage", event.origin, event.data);
 
 			var origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
 			if (origin !== iframe_path) return; //incoming message not from iframe
@@ -43,6 +57,7 @@
 
 		//an error occured loading the iframe from specified source (based on timeout)
 		function _iframe_load_error_occured(){
+			_log("_iframe_load_error_occured");
 			_iframe_load_error = true;
 			_fire_pending_callbacks();
 		}
@@ -72,9 +87,11 @@
 				msg_type: 'xdsc_write',
 				cookie_name: cookie_name,
 				cookie_val: cookie_value,
-				expires_days: expires_days
+				expires_days: expires_days,
+				secure_only: _secure_only
 			};
 
+			_log("_set_cookie_in_iframe", data);
 			document.getElementById('xdomain_cookie_'+_id).contentWindow.postMessage(JSON.stringify(data), iframe_path );
 		}
 
@@ -93,7 +110,9 @@
 		function _set_local_cookie( cookie_name, cookie_value, expires_days ){
 			var d = new Date();
 		    d.setTime(d.getTime() + ( expires_days*1000*60*60*24) );
-		    document.cookie = cookie_name + "=" + cookie_value + "; expires="+d.toUTCString();
+		    var cookie_val = cookie_name + "=" + cookie_value + "; expires="+d.toUTCString() + (_secure_only ? ";secure" : "");
+		    _log("_set_local_cookie", cookie_val);
+		    document.cookie = cookie_val;
 		}
 
 		//function to set the value for both cookies (local & xdomain)
@@ -126,9 +145,12 @@
 			
 			expires_days = expires_days || _default_expires_days;
 
+			_log("_get_xdomain_cookie_value A", cookie_name);
+
 			//cb function to create closure for pending user callback
 			function _cb( xdomain_success, cookie_val, callback ){
 
+				_log("_get_xdomain_cookie_value D", xdomain_success, cookie_val);
 				//re-up the cookie
 				_set_xdomain_cookie_value( cookie_name, cookie_val, expires_days );
 
@@ -139,6 +161,7 @@
 				//see if local cookie is set - if so, no need to wait for iframe to fetch cookie
 				var _existing_local_cookie_val = _get_local_cookie( cookie_name );
 				if(_existing_local_cookie_val){
+					_log("_get_xdomain_cookie_value B", _existing_local_cookie_val);
 					//set onready call to write-through cookie once iframe is ready, then call callback directly
 					_on_iframe_ready_or_error( function( is_err ){
 						_cb( !is_err, _existing_local_cookie_val );
@@ -150,6 +173,7 @@
 			//no local cookie is set/present, so bind CB to iframe ready/error callback so it's pinged a soon as we hit a ready state from iframe
 			_on_iframe_ready_or_error(function( is_err ){
 
+				_log("_get_xdomain_cookie_value C", is_err);
 				//if an error occurs loading the iframe, return appropriate response w/ callback
 				if(is_err) return _cb( false, null, callback );
 				
@@ -169,18 +193,18 @@
 		var data = {
 			namespace: _namespace,
 			window_origin: window.location.origin,
-			iframe_origin: iframe_path
+			iframe_origin: iframe_path,
+			debug: _debug
 		};
 		ifr.src = iframe_path+'/xdomain_cookie.html#'+encodeURIComponent(JSON.stringify(data));
 		document.body.appendChild( ifr );
 
+		_log("creating iframe", ifr.src);
+
 		//set timeout to specify load error if iframe doesn't load in _load_wait_ms
-		setTimeout( 
-			function(){
-				if(!_iframe_ready) _iframe_load_error_occured();
-			}, 
-			_load_wait_ms 
-		);
+		setTimeout( function(){
+			if(!_iframe_ready) _iframe_load_error_occured();
+		}, _load_wait_ms );
 
 		return {
 			get: _get_xdomain_cookie_value,
