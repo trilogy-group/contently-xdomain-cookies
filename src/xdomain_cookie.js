@@ -1,4 +1,4 @@
-/* Version 1.0.6 xdomain-cookies (http://contently.github.io/xdomain-cookies/) from Contently (https://github.com/contently) */
+/* Version 1.0.7 xdomain-cookies (http://contently.github.io/xdomain-cookies/) from Contently (https://github.com/contently) */
 
 (function(exports) {
 	"use strict";
