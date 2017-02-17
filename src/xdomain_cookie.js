@@ -1,4 +1,4 @@
-/* Version 1.0.7 xdomain-cookies (http://contently.github.io/xdomain-cookies/) from Contently (https://github.com/contently) */
+/* Version 1.0.8 xdomain-cookies (http://contently.github.io/xdomain-cookies/) from Contently (https://github.com/contently) */
 
 (function(exports) {
 	"use strict";
@@ -186,9 +186,16 @@
 		var ifr = document.createElement('iframe');
 		ifr.style.display = 'none';
 		ifr.id = 'xdomain_cookie_'+_id;
+
+		var origin = window.location.origin;
+		//IE fix
+		if(!origin){
+  			origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
+		}
+
 		var data = {
 			namespace: _namespace,
-			window_origin: window.location.origin,
+			window_origin: origin,
 			iframe_origin: iframe_path,
 			debug: _debug
 		};
