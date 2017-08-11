@@ -31,7 +31,7 @@ Simply include the script on any page where it's needed, create a new instance o
 Usage Notes
 ------
 
-_Please Note_ that it's important for the `xdomain_cookie.min.js` file to be served from the same domain _and_ protocol as the path passed in for the iframe creation (when creating `xDomainCookie`). You can setup the script to use whichever page the protocol of the main window is using by specifying `//` as the protocol prefix (instead of explicit `https://` or `http://`, assuming the webserver hosting the `xdomain_cookie.html` file supports that procolol). It's also OK to serve both the script and iframe path over HTTPS in all instances, regardless of if the main page is loaded over HTTPS.
+_Please Note_ that it's important for the `xdomain_cookie.min.js` file to be served from the same domain _and_ protocol as the path passed in for the iframe creation (when creating `xDomainCookie`). You can setup the script to use whichever page the protocol of the main window is using by specifying `//` as the protocol prefix (instead of explicit `https://` or `http://`, assuming the webserver hosting the `xdomain_cookie.html` file supports that protocol). It's also OK to serve both the script and iframe path over HTTPS in all instances, regardless of if the main page is loaded over HTTPS.
 
 This script should work in all modern desktop and mobile browsers that support the postMessage API (IE 8+, Chrome, FF, etc). 
 
