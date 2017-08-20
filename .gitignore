@@ -1,2 +1,4 @@
 .ds_store
 node_modules
+.idea/
+dist/
