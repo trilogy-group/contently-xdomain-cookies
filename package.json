@@ -8,7 +8,8 @@
   "description": "JS class for cross-domain shared cookie (via iframe shim)",
   "scripts": {
     "test": "gulp test",
-    "dev": "node test/test_webserver.js"
+    "dev": "node test/test_webserver.js",
+    "start": "webpack --config webpack.config.js"
   },
   "homepage": "http://contently.github.io/xdomain-cookies/",
   "author": "Evan Carothers",
@@ -27,6 +28,7 @@
     "mocha": "~2.4.5",
     "run-sequence": "~1.2.2",
     "serve-static": "~1.10.2",
+    "webpack": "^3.5.5",
     "zombie": "~4.2.1"
   }
 }
