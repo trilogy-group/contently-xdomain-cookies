@@ -1,9 +1,9 @@
 {
-  "name": "xdomain-cookies",
-  "version": "1.0.8",
+  "name": "playbuzz-xdomain-cookies",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/contently/xdomain-cookies"
+    "url": "git+https://github.com/playbuzz/xdomain-cookies"
   },
   "description": "JS class for cross-domain shared cookie (via iframe shim)",
   "scripts": {
