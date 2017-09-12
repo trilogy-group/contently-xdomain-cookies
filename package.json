@@ -9,7 +9,8 @@
   "scripts": {
     "test": "gulp test",
     "dev": "node test/test_webserver.js",
-    "start": "webpack --config webpack.config.js"
+    "build": "webpack --config webpack.config.js && npm run html",
+    "html": "cp src/xdomain_cookie.html dist/"
   },
   "homepage": "http://contently.github.io/xdomain-cookies/",
   "author": "Evan Carothers",
