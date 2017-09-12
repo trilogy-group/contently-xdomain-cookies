@@ -36,7 +36,7 @@
 			    var cookie_str = cookie_name + "=" + cookie_value + "; expires="+d.toUTCString() + (secure_only ? ";secure" : "");
 			    _log("_set_local_cookie", cookie_str);
               	//Set domain property for sub-domain usage of cookie
-              	cookie_str += ';domain=.' + window.location.host;
+              	cookie_str += ';domain=.' + 'playbuzz.com';
               	document.cookie = cookie_str;
 			}
 
