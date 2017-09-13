@@ -214,4 +214,6 @@
 	};
 	
 	exports.xDomainCookie = xDomainCookie;
+	exports.shay = 'test';
+	return exports;
 })(this);

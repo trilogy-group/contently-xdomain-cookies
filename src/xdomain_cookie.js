@@ -1,5 +1,4 @@
 /* Version 1.0.8 xdomain-cookies (http://contently.github.io/xdomain-cookies/) from Contently (https://github.com/contently) */
-
 (function(exports) {
 	"use strict";
 	
@@ -187,7 +186,7 @@
 		ifr.style.display = 'none';
 		ifr.id = 'xdomain_cookie_'+_id;
 
-		var origin = window.location.origin;
+		var origin = window.parent.location.origin;
 		//IE fix
 		if(!origin){
   			origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
@@ -216,4 +215,4 @@
 	};
 	
 	exports.xDomainCookie = xDomainCookie;
-})(this);
+})(window);
