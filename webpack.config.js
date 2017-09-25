@@ -2,12 +2,18 @@
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
-  entry: './src/xdomain_cookie.js', // bundle's entry point
-  plugins: [
-    new UglifyJSPlugin()
-  ],
-  output: {
-    path: __dirname + '/dist', // output directory
-    filename: 'xdomain_cookie.js' // name of the generated bundle
-  }
+    entry: {
+        'xdomain_cookie': './src/xdomain_cookie.js',
+        'xdomain_cookie.min': './src/xdomain_cookie.js'
+    },
+    plugins: [
+        new UglifyJSPlugin({
+            include: /\.min\.js$/,
+            minimize: true
+        })
+    ],
+    output: {
+        path: __dirname + '/dist', // output directory
+        filename: "[name].js" // name of the generated bundle
+    }
 };
