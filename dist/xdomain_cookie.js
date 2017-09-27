@@ -77,7 +77,8 @@
 
         if (iframe_path.substr(0, 2) === '//') {
             //verify protocol is present & used
-            iframe_path = (window.parent.location.protocol === 'https:' ? 'https:' : 'http:') + iframe_path;
+            var protocol = window.location.protocol === 'about:' ? window.parent.location.protocol : window.location.protocol;
+            iframe_path = (protocol === 'https:' ? 'https:' : 'http:') + iframe_path;
         }
 
         var _namespace = namespace || 'xdsc',						//namespace for the shared cookie in case there are multiple instances on one page - prevents postMessage collision
