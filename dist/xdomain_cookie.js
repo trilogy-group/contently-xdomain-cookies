@@ -77,7 +77,7 @@
 
         if (iframe_path.substr(0, 2) === '//') {
             //verify protocol is present & used
-            var protocol = window.location.protocol === 'about:' ? window.parent.location.protocol : window.location.protocol;
+            var protocol = (window.location.protocol === 'about:' || window.location.protocol === 'about:blank') ? window.parent.location.protocol : window.location.protocol;
             iframe_path = (protocol === 'https:' ? 'https:' : 'http:') + iframe_path;
         }
 
