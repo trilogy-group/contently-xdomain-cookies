@@ -10,7 +10,7 @@
     "test": "gulp test",
     "dev": "node test/test_webserver.js",
     "build": "npm run clean && webpack --config webpack.config.js && npm run html",
-    "html": "cp src/xdomain_cookie.html dist/",
+    "html": "copy src\\xdomain_cookie.html dist",
     "clean": "rimraf dist"
   },
   "homepage": "http://contently.github.io/xdomain-cookies/",
