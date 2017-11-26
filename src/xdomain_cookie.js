@@ -13,9 +13,7 @@
         }
 
         var _namespace = namespace || 'xdsc',						//namespace for the shared cookie in case there are multiple instances on one page - prevents postMessage collision
-            _load_wait_ms = iframe_load_timeout_ms || (1000 * 6), 	//wait 6 seconds if no other overloaded wait time specified
             _iframe_ready = false,									//has the iframe posted back as ready?
-            _iframe_load_error = false,								//was there an error loading the iframe from specified iframe_path in designated iframe_load_timeout_ms?
             _callbacks = [],										//list of pending callbacks to ping when iframe is ready or err occurs
             _xdomain_cookie_data = {},								//shared cookie data set by the iframe after load/ready
             _id = new Date().getTime(),								//identifier to use for iframe in case there are multiple on the page
@@ -55,13 +53,6 @@
             _fire_pending_callbacks();
         }
 
-        //an error occured loading the iframe from specified source (based on timeout)
-        function _iframe_load_error_occured() {
-            _log("_iframe_load_error_occured");
-            _iframe_load_error = true;
-            _fire_pending_callbacks();
-        }
-
         //wait until iframe is loaded & ready, or an error occurs, then execute callbakcfunction
         function _on_iframe_ready_or_error(cb) {
             _callbacks.push(cb);
@@ -70,9 +61,9 @@
 
         //run all pending callbacks that are registered
         function _fire_pending_callbacks() {
-            if (!_iframe_load_error && !_iframe_ready) return; //not yet ready to fire callbacks, still waiting on error or ready
+            if (!_iframe_ready) return; //not yet ready to fire callbacks, still waiting on error or ready
             while (_callbacks.length > 0) {
-                _callbacks.pop()(_iframe_load_error);
+                _callbacks.pop()(false);
             }
         }
 
@@ -119,7 +110,7 @@
         function _set_xdomain_cookie_value(cookie_name, cookie_value, expires_days) {
 
             //if iframe isn't ready, wait for it to be ready
-            if (!_iframe_ready && !_iframe_load_error) {
+            if (!_iframe_ready) {
                 return _callbacks.push(function () {
                     _set_xdomain_cookie_value(cookie_name, cookie_value, expires_days);
                 });
@@ -131,9 +122,7 @@
 
             if (!_xdomain_only) _set_local_cookie(cookie_name, cookie_value, expires_days);
 
-            if (!_iframe_load_error) {
-                _set_cookie_in_iframe(cookie_name, cookie_value, expires_days);
-            }
+            _set_cookie_in_iframe(cookie_name, cookie_value, expires_days);
 
             //set local cached value
             _xdomain_cookie_data[cookie_name] = cookie_value;
@@ -207,11 +196,6 @@
         document.body.appendChild(ifr);
 
         _log("creating iframe", ifr.src);
-
-        //set timeout to specify load error if iframe doesn't load in _load_wait_ms
-        setTimeout(function () {
-            if (!_iframe_ready) _iframe_load_error_occured();
-        }, _load_wait_ms);
 
         return {
             get: _get_xdomain_cookie_value,
