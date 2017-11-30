@@ -107,8 +107,7 @@
             _namespace = _hash_data.namespace,
             _window_origin = _hash_data.window_origin,
             _iframe_origin = _hash_data.iframe_origin,
-            _debug = _hash_data.debug,
-            _page_identifier = _hash_data.page_identifier;
+            _debug = _hash_data.debug;
 
         return {
             listen: listen,
@@ -131,8 +130,6 @@
             var origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
             if ([_window_origin, _iframe_origin].indexOf(origin) === -1) return; //incoming message not from iframe page
 
-            debug("incoming message:", event.data);
-
             //We must filter messages here to verify that it's the specific message/type we are looking for, and not from another script
             var data = null;
             try {
@@ -144,6 +141,8 @@
             if (!('msg_type' in data) || data.msg_type !== 'xdsc_write') return; //data is not a xdomainc-cookie payload
             if (!('namespace' in data) || data.namespace !== _namespace) return; //wrong namespace for msg
 
+            debug("got cookie from page:", data.cookie_name, data.cookie_val, data.expires_days);
+
             var expires_days = parseInt(data.expires_days, 10);
 
             cookieStore.setItem(data.cookie_name, data.cookie_val, expires_days);
@@ -152,27 +151,24 @@
                 // If we got here, it means we have failed to set the cookie.
                 // It can happen in cases third-party cookies are blocked by the browser.
                 // We notify the parent that we failed.
-                reportFailure(data.cookie_val);
+                reportFailureToParent();
             }
 
             //ping down to page again to update values of xdomain cookie data
             sendCookiesToParent();
         }
 
-        function reportFailure(cookie_val) {
+        function reportFailureToParent() {
 
             debug('!!! FAILED TO SET COOKIE !!!');
 
-            var event = {
-                eventName: 'user_cookie_blocked',
-                userId: cookie_val.userId,
-                pageloadUid: _page_identifier
+            var msg = {
+                msg_type: 'xdsc_fail',
+                namespace: _namespace
             };
 
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', '//stg-data-collector.playbuzz.com/main/events', true);
-            xhr.setRequestHeader('Content-Type', 'text/plain;charset=UTF-8');
-            xhr.send(JSON.stringify(event));
+            //postmessage to parent window w/ data
+            window.parent.postMessage(JSON.stringify(msg), _window_origin);
         }
 
         function sendCookiesToParent() {
