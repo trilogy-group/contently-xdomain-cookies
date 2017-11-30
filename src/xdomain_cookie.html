@@ -1,92 +1,209 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script>
-        "use strict";
-        window.IframeShim = (function () {
+</head>
+<body>
+<script>
+    "use strict";
 
-            //orign & namespace data is passed in via urlencoded json object in url hash
-            var _hash_data = JSON.parse(decodeURIComponent(window.location.hash.substr(1))),
-                _namespace = _hash_data.namespace,
-                _window_origin = _hash_data.window_origin,
-                _iframe_origin = _hash_data.iframe_origin,
-                _debug = _hash_data.debug;
+    function CookieStore() {
 
-            function _log() {
-                if (!_debug) return;
-                arguments[0] = ":XDC_IFR: " + arguments[0];
-                console.log.apply(console, arguments);
+        // Declaration
+
+        return {
+            getItem: getItem,
+            getAllItems: getAllItems,
+            setItem: setItem,
+            removeItem: removeItem,
+            hasItem: hasItem,
+            keys: keys
+        };
+
+        // Implementation
+
+        function getItem(sKey) {
+            if (!sKey) {
+                return null;
             }
+            return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null;
+        }
 
-            //basic cookie getter function (returns object of all cookies key/val)
-            function _get_local_cookies() {
-                var cstring = document.cookie.split(';'),
-                    cookies = {};
-                cstring.forEach(function (cs) {
-                    var vals = cs.trim().split("=");
-                    if (!vals[0]) return;
-                    cookies[vals[0]] = decodeURIComponent(vals[1]);
-                });
-                return cookies;
-            }
+        function getAllItems() {
 
-            //basic cookie setter function
-            function _set_local_cookie(cookie_name, cookie_value, expires_days, secure_only) {
-                var d = new Date();
-                d.setTime(d.getTime() + (expires_days * 1000 * 60 * 60 * 24));
-                var cookie_str = cookie_name + "=" + encodeURIComponent(cookie_value) + "; expires=" + d.toUTCString() + (secure_only ? ";secure" : "");
-                _log("_set_local_cookie", cookie_str);
-                //Set domain property for sub-domain usage of cookie
-                cookie_str += ';domain=.' + 'playbuzz.com';
-                document.cookie = cookie_str;
-            }
+            var cookies = {};
 
-            //listen for incoming postMessage requests (to write cookie, incoming from local page that loaded iframe)
-            window.addEventListener('message', function (event) {
-
-                _log("incoming postMessage", event.origin, event.data);
-
-                var origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
-                if ([_window_origin, _iframe_origin].indexOf(origin) === -1) return; //incoming message not from iframe page
-
-                //We must filter messages here to verify that it's the specific message/type we are looking for, and not from another script
-                var data = null;
-                try {
-                    data = JSON.parse(event.data);
-                } catch (e) {
-                }
-
-                if (typeof data !== 'object' || (data instanceof Array)) return; //data is not a non-array object
-                if (!('msg_type' in data) || data.msg_type !== 'xdsc_write') return; //data is not a xdomainc-cookie payload
-                if (!('namespace' in data) || data.namespace !== _namespace) return; //wrong namespace for msg
-
-                if (data.secure_only && window.location.protocol !== 'https:') {
-                    console.error("xDomainCookie - ERROR, secure_only flag set but page is not loaded over HTTPS:");
-                }
-
-                var expires_days = parseInt(data.expires_days, 10);
-                _set_local_cookie(data.cookie_name, data.cookie_val, expires_days, data.secure_only);
-                //ping down to page again to update values of xdomain cookie data
-                _send_xdomain_cookie_data_to_page();
+            keys().forEach(function (key) {
+                cookies[key] = getItem(key);
             });
 
-            function _send_xdomain_cookie_data_to_page() {
-                var msg = {
-                    cookies: _get_local_cookies(),
-                    msg_type: 'xdsc_read',
-                    namespace: _namespace
-                };
+            return cookies;
+        }
 
-                _log("_send_xdomain_cookie_data_to_page", msg);
-                //postmessage to parent window w/ data
-                window.parent.postMessage(JSON.stringify(msg), _window_origin);
+        function setItem(sKey, sValue, vEnd, sPath, sDomain, bSecure) {
+            if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) {
+                return false;
+            }
+            var sExpires = "";
+            if (vEnd) {
+                switch (vEnd.constructor) {
+                    case Number:
+                        sExpires = vEnd === Infinity ? "; expires=Fri, 31 Dec 9999 23:59:59 GMT" : "; max-age=" + vEnd;
+                        /*
+                        Note: Despite officially defined in RFC 6265, the use of `max-age` is not compatible with any
+                        version of Internet Explorer, Edge and some mobile browsers. Therefore passing a number to
+                        the end parameter might not work as expected. A possible solution might be to convert the the
+                        relative time to an absolute time. For instance, replacing the previous line with:
+                        */
+                        /*
+                        sExpires = vEnd === Infinity ? "; expires=Fri, 31 Dec 9999 23:59:59 GMT" : "; expires=" + (new Date(vEnd * 1e3 + Date.now())).toUTCString();
+                        */
+                        break;
+                    case String:
+                        sExpires = "; expires=" + vEnd;
+                        break;
+                    case Date:
+                        sExpires = "; expires=" + vEnd.toUTCString();
+                        break;
+                }
+            }
+            document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) + sExpires + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "") + (bSecure ? "; secure" : "");
+            return true;
+        }
+
+        function removeItem(sKey, sPath, sDomain) {
+            if (!hasItem(sKey)) {
+                return false;
+            }
+            document.cookie = encodeURIComponent(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "");
+            return true;
+        }
+
+        function hasItem(sKey) {
+            if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) {
+                return false;
+            }
+            return (new RegExp("(?:^|;\\s*)" + encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
+        }
+
+        function keys() {
+            var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
+
+            aKeys = aKeys.filter(function (key) {
+                return key !== ''
+            });
+
+            for (var nLen = aKeys.length, nIdx = 0; nIdx < nLen; nIdx++) {
+                aKeys[nIdx] = decodeURIComponent(aKeys[nIdx]);
             }
 
-            //initialization - ping parent window w/ cookie payload right away so it an hit callbacks asap
-            _send_xdomain_cookie_data_to_page();
+            return aKeys;
+        }
+    }
 
-        })();
-    </script>
-</head>
-<body></body>
+    function ParentCommunicator(cookieStore) {
+
+        // origin & namespace data is passed in via urlencoded json object in url hash
+        var _hash_data = JSON.parse(decodeURIComponent(window.location.hash.substr(1))),
+            _namespace = _hash_data.namespace,
+            _window_origin = _hash_data.window_origin,
+            _iframe_origin = _hash_data.iframe_origin,
+            _debug = _hash_data.debug,
+            _page_identifier = _hash_data.page_identifier;
+
+        return {
+            listen: listen,
+            sendCookiesToParent: sendCookiesToParent
+        };
+
+        // Implementation
+
+        function listen() {
+
+            //listen for incoming postMessage requests (to write cookie, incoming from local page that loaded iframe)
+            window.addEventListener('message', onIncomingMessage);
+
+            //initialization - ping parent window w/ cookie payload right away so it an hit callbacks asap
+            sendCookiesToParent();
+        }
+
+        function onIncomingMessage(event) {
+
+            var origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
+            if ([_window_origin, _iframe_origin].indexOf(origin) === -1) return; //incoming message not from iframe page
+
+            debug("incoming message:", event.data);
+
+            //We must filter messages here to verify that it's the specific message/type we are looking for, and not from another script
+            var data = null;
+            try {
+                data = JSON.parse(event.data);
+            } catch (e) {
+            }
+
+            if (typeof data !== 'object' || (data instanceof Array)) return; //data is not a non-array object
+            if (!('msg_type' in data) || data.msg_type !== 'xdsc_write') return; //data is not a xdomainc-cookie payload
+            if (!('namespace' in data) || data.namespace !== _namespace) return; //wrong namespace for msg
+
+            var expires_days = parseInt(data.expires_days, 10);
+
+            cookieStore.setItem(data.cookie_name, data.cookie_val, expires_days);
+
+            if (!cookieStore.hasItem(data.cookie_name)){
+                // If we got here, it means we have failed to set the cookie.
+                // It can happen in cases third-party cookies are blocked by the browser.
+                // We notify the parent that we failed.
+                reportFailure(data.cookie_val);
+            }
+
+            //ping down to page again to update values of xdomain cookie data
+            sendCookiesToParent();
+        }
+
+        function reportFailure(cookie_val) {
+
+            debug('!!! FAILED TO SET COOKIE !!!');
+
+            var event = {
+                eventName: 'user_cookie_blocked',
+                userId: cookie_val.userId,
+                pageloadUid: _page_identifier
+            };
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '//stg-data-collector.playbuzz.com/main/events', true);
+            xhr.setRequestHeader('Content-Type', 'text/plain;charset=UTF-8');
+            xhr.send(JSON.stringify(event));
+        }
+
+        function sendCookiesToParent() {
+
+            var cookies = store.getAllItems();
+
+            var msg = {
+                cookies: cookies,
+                msg_type: 'xdsc_read',
+                namespace: _namespace
+            };
+
+            debug("sending cookies to parent:", cookies);
+
+            //postmessage to parent window w/ data
+            window.parent.postMessage(JSON.stringify(msg), _window_origin);
+        }
+
+        function debug() {
+            if (!_debug) return;
+            arguments[0] = "[XDOMAIN IFRAME] " + arguments[0];
+            console.log.apply(console, arguments);
+        }
+    }
+
+    var store = new CookieStore(),
+        communicator = new ParentCommunicator(store);
+
+    communicator.listen();
+    communicator.sendCookiesToParent();
+
+</script>
+</body>
 </html>
