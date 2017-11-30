@@ -1,32 +1,37 @@
 {
-  "name": "xdomain-cookies",
-  "version": "1.0.8",
+  "name": "playbuzz-xdomain-cookies",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/contently/xdomain-cookies"
+    "url": "git+https://github.com/playbuzz/xdomain-cookies"
   },
   "description": "JS class for cross-domain shared cookie (via iframe shim)",
   "scripts": {
     "test": "gulp test",
-    "dev": "node test/test_webserver.js"
+    "dev": "node test/test_webserver.js",
+    "build": "npm run clean && webpack --config webpack.config.js && npm run html",
+    "html": "copy src\\xdomain_cookie.html dist",
+    "clean": "rimraf dist"
   },
   "homepage": "http://contently.github.io/xdomain-cookies/",
   "author": "Evan Carothers",
   "license": "CC",
   "devDependencies": {
-    "chai": "^3.5.0",
-    "connect": "^3.4.1",
-    "express": "^4.13.4",
-    "gulp": "^3.9.1",
-    "gulp-insert": "^0.5.0",
-    "gulp-jshint": "^2.0.1",
-    "gulp-mocha": "^3.0.1",
-    "gulp-rename": "^1.2.2",
-    "gulp-uglify": "^2.0.0",
-    "jshint": "^2.9.3",
-    "mocha": "^2.4.5",
-    "run-sequence": "^1.2.2",
-    "serve-static": "^1.10.2",
-    "zombie": "^4.2.1"
+    "chai": "~3.5.0",
+    "connect": "~3.4.1",
+    "express": "~4.13.4",
+    "gulp": "~3.9.1",
+    "gulp-insert": "~0.5.0",
+    "gulp-jshint": "~2.0.1",
+    "gulp-mocha": "~3.0.1",
+    "gulp-rename": "~1.2.2",
+    "gulp-uglify": "~2.0.0",
+    "jshint": "~2.9.3",
+    "mocha": "~2.4.5",
+    "run-sequence": "~1.2.2",
+    "serve-static": "~1.10.2",
+    "webpack": "~3.5.5",
+    "zombie": "~4.2.1",
+    "rimraf": "~2.6.2"
   }
 }
