@@ -6,42 +6,70 @@
 <script>
     "use strict";
 
+    function LocalStorageStore() {
+
+        // Declaration
+
+        return {
+            get: get,
+            set: set,
+            has: has
+        };
+
+        // Implementation
+
+        function set(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function get(key) {
+            if (!key) {
+                return null;
+            }
+
+            try {
+                return JSON.parse(localStorage.getItem(key));
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function has(key) {
+            try {
+                return localStorage.getItem(key) !== null;
+            } catch (e) {
+                return false;
+            }
+        }
+    }
+
     function CookieStore() {
 
         // Declaration
 
         return {
-            getItem: getItem,
-            getAllItems: getAllItems,
-            setItem: setItem,
-            removeItem: removeItem,
-            hasItem: hasItem,
-            keys: keys
+            get: get,
+            set: set,
+            has: has
         };
 
         // Implementation
 
-        function getItem(sKey) {
-            if (!sKey) {
+        function get(key) {
+            if (!key) {
                 return null;
             }
-            return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null;
+            return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null;
         }
 
-        function getAllItems() {
-
-            var cookies = {};
-
-            keys().forEach(function (key) {
-                cookies[key] = getItem(key);
-            });
-
-            return cookies;
-        }
-
-        function setItem(sKey, sValue, vEnd, sPath, sDomain, bSecure) {
-            if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) {
-                return false;
+        function set(key, value, vEnd, sPath, sDomain, bSecure) {
+            if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) {
+                return;
             }
             var sExpires = "";
             if (vEnd) {
@@ -66,41 +94,18 @@
                         break;
                 }
             }
-            document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) + sExpires + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "") + (bSecure ? "; secure" : "");
-            return true;
+            document.cookie = encodeURIComponent(key) + "=" + encodeURIComponent(value) + sExpires + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "") + (bSecure ? "; secure" : "");
         }
 
-        function removeItem(sKey, sPath, sDomain) {
-            if (!hasItem(sKey)) {
+        function has(key) {
+            if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) {
                 return false;
             }
-            document.cookie = encodeURIComponent(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "");
-            return true;
-        }
-
-        function hasItem(sKey) {
-            if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) {
-                return false;
-            }
-            return (new RegExp("(?:^|;\\s*)" + encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
-        }
-
-        function keys() {
-            var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
-
-            aKeys = aKeys.filter(function (key) {
-                return key !== ''
-            });
-
-            for (var nLen = aKeys.length, nIdx = 0; nIdx < nLen; nIdx++) {
-                aKeys[nIdx] = decodeURIComponent(aKeys[nIdx]);
-            }
-
-            return aKeys;
+            return (new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
         }
     }
 
-    function ParentCommunicator(cookieStore) {
+    function ParentCommunicator(cookieStore, localStore) {
 
         // origin & namespace data is passed in via urlencoded json object in url hash
         var _hash_data = JSON.parse(decodeURIComponent(window.location.hash.substr(1))),
@@ -111,21 +116,19 @@
 
         return {
             listen: listen,
-            sendCookiesToParent: sendCookiesToParent
+            sendDataToParent: sendDataToParent
         };
 
         // Implementation
 
         function listen() {
-
             //listen for incoming postMessage requests (to write cookie, incoming from local page that loaded iframe)
             window.addEventListener('message', onIncomingMessage);
-
-            //initialization - ping parent window w/ cookie payload right away so it an hit callbacks asap
-            sendCookiesToParent();
         }
 
         function onIncomingMessage(event) {
+
+            // Verify this is a message for us.
 
             var origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
             if ([_window_origin, _iframe_origin].indexOf(origin) === -1) return; //incoming message not from iframe page
@@ -141,49 +144,67 @@
             if (!('msg_type' in data) || data.msg_type !== 'xdsc_write') return; //data is not a xdomainc-cookie payload
             if (!('namespace' in data) || data.namespace !== _namespace) return; //wrong namespace for msg
 
-            debug("got cookie from page:", data.cookie_name, data.cookie_val, data.expires_days);
+            debug("got data from page:", data.cookie_name, data.cookie_val, data.expires_days);
+
+            // Set the data.
 
             var expires_days = parseInt(data.expires_days, 10);
 
-            cookieStore.setItem(data.cookie_name, data.cookie_val, expires_days);
+            // Set in cookie.
+            cookieStore.set(data.cookie_name, data.cookie_val, expires_days);
 
-            if (!cookieStore.hasItem(data.cookie_name)){
+            // Set in local storage.
+            localStore.set(data.cookie_name, data.cookie_val);
+
+            var cookieFailed = !cookieStore.has(data.cookie_name);
+            var localStorageFailed = !localStore.has(data.cookie_name);
+
+            if (cookieFailed || localStorageFailed) {
                 // If we got here, it means we have failed to set the cookie.
-                // It can happen in cases third-party cookies are blocked by the browser.
+                // It can happen in cases third-party cookies or local storage are blocked by the browser.
                 // We notify the parent that we failed.
-                reportFailureToParent();
+                reportFailureToParent(cookieFailed, localStorageFailed);
             }
 
-            //ping down to page again to update values of xdomain cookie data
-            sendCookiesToParent();
+            // ping down to page again to update values of xdomain cookie data
+            sendDataToParent();
         }
 
-        function reportFailureToParent() {
+        function reportFailureToParent(cookieFailed, localStorageFailed) {
 
-            debug('!!! FAILED TO SET COOKIE !!!');
+            if (cookieFailed){
+                debug('FAILED TO SET COOKIE');
+            }
+            if (localStorageFailed){
+                debug('FAILED TO SET LOCAL STORAGE');
+            }
 
             var msg = {
                 msg_type: 'xdsc_fail',
+                cookie_failed: cookieFailed,
+                local_storage_failed: localStorageFailed,
                 namespace: _namespace
             };
 
-            //postmessage to parent window w/ data
+            //postmessage to parent window with data
             window.parent.postMessage(JSON.stringify(msg), _window_origin);
         }
 
-        function sendCookiesToParent() {
+        function sendDataToParent() {
 
-            var cookies = store.getAllItems();
+            var data = {
+                'playbuzz': cookieStore.get('playbuzz') || localStore.get('playbuzz')
+            };
 
             var msg = {
-                cookies: cookies,
+                cookies: data,
                 msg_type: 'xdsc_read',
                 namespace: _namespace
             };
 
-            debug("sending cookies to parent:", cookies);
+            debug("sending data to parent:", data);
 
-            //postmessage to parent window w/ data
+            // postmessage to parent window with data
             window.parent.postMessage(JSON.stringify(msg), _window_origin);
         }
 
@@ -194,11 +215,12 @@
         }
     }
 
-    var store = new CookieStore(),
-        communicator = new ParentCommunicator(store);
+    var cookieStore = new CookieStore(),
+        localStore = new LocalStorageStore(),
+        communicator = new ParentCommunicator(cookieStore, localStore);
 
     communicator.listen();
-    communicator.sendCookiesToParent();
+    communicator.sendDataToParent();
 
 </script>
 </body>
