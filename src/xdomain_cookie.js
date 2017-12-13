@@ -1,4 +1,3 @@
-/* Version 1.0.8 xdomain-cookies (http://contently.github.io/xdomain-cookies/) from Contently (https://github.com/contently) */
 (function (exports) {
     "use strict";
 
@@ -23,13 +22,13 @@
             _debug = !!debug;
 
         //bind postmessage listeners for incoming messages from iframe
-        window.addEventListener('message', _inbound_postmessage);
+        window.addEventListener('message', onIncomingMessage);
 
         createIframe();
 
         return {
-            get: _get_xdomain_cookie_value,
-            set: _set_xdomain_cookie_value,
+            get: get,
+            set: set,
             subscribeToFailure: subscribeToFailure
         };
 
@@ -67,7 +66,9 @@
         }
 
         //function called on inbound post message - filter/verify that message is for our consumption, then set ready data an fire callbacks
-        function _inbound_postmessage(event) {
+        function onIncomingMessage(event) {
+
+            // Verify it's a message for us.
 
             var origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
             if (iframe_path.substr(0, origin.length) !== origin) return; //incoming message not from iframe
@@ -83,30 +84,24 @@
             if (!('namespace' in data) || data.namespace !== _namespace) return; //wrong namespace for msg
             if (!('msg_type' in data)) return; //data is not a xdomainc-cookie payload
 
+            // If it's a data message.
             if (data.msg_type === 'xdsc_read') {
-                //NOTE - the only thing iframe postMessages to us is when it's initially loaded, and it includes payload of all cookies set on iframe domain
-                _log("got cookies from iframe:", data.cookies);
+                _log("got data from iframe:", data.cookies);
+
                 _xdomain_cookie_data = data.cookies;
                 _iframe_ready = true;
-                _fire_pending_callbacks();
+                firePendingCallbacks();
 
             } else if (data.msg_type === 'xdsc_fail') {
 
                 _log("got failure from iframe");
                 _iframe_failed = true;
-                _fire_pending_failure_callbacks();
+                firePendingFailureCallbacks(data.cookie_failed, data.local_storage_failed);
             }
-
-        }
-
-        //wait until iframe is loaded & ready, or an error occurs, then execute callbakcfunction
-        function _on_iframe_ready(cb) {
-            _callbacks.push(cb);
-            _fire_pending_callbacks();
         }
 
         //run all pending callbacks that are registered
-        function _fire_pending_callbacks() {
+        function firePendingCallbacks() {
             if (!_iframe_ready) return; //not yet ready to fire callbacks, still waiting on error or ready
             while (_callbacks.length > 0) {
                 _callbacks.pop()();
@@ -121,18 +116,18 @@
         }
 
         //run all pending callbacks that are registered to failure
-        function _fire_pending_failure_callbacks() {
+        function firePendingFailureCallbacks(cookie_failed, local_storage_failed) {
             while (_failureCallbacks.length > 0) {
-                _failureCallbacks.pop()();
+                _failureCallbacks.pop()(cookie_failed, local_storage_failed);
             }
         }
 
         //set a cookie in the iframe @ iframe_path
-        function _set_cookie_in_iframe(cookie_name, cookie_value, expires_days) {
+        function sendDataToIframe(cookie_name, cookie_value, expires_days) {
             //NOTE - this function is only called from within _on_iframe_ready_or_err  function when there is NOT an error
             //so we can safely assume iframe is present, ready, and callable at this point
 
-            //postMessage to Iframe w/ info
+            //postMessage to Iframe with info
             var data = {
                 namespace: _namespace,
                 msg_type: 'xdsc_write',
@@ -147,20 +142,21 @@
         }
 
         //function to set the value for both cookies (local & xdomain)
-        function _set_xdomain_cookie_value(cookie_name, cookie_value, expires_days) {
+        function set(cookie_name, cookie_value, expires_days) {
 
             //if iframe isn't ready, wait for it to be ready
             if (!_iframe_ready) {
                 return _callbacks.push(function () {
-                    _set_xdomain_cookie_value(cookie_name, cookie_value, expires_days);
+                    set(cookie_name, cookie_value, expires_days);
                 });
             }
 
             expires_days = expires_days || _default_expires_days;
+
             //if cookie is empty (null or undefined) delete the cookie
             expires_days = (cookie_value === null || cookie_value === undefined) ? -100 : expires_days;
 
-            _set_cookie_in_iframe(cookie_name, cookie_value, expires_days);
+            sendDataToIframe(cookie_name, cookie_value, expires_days);
 
             //set local cached value
             _xdomain_cookie_data[cookie_name] = cookie_value;
@@ -168,7 +164,7 @@
 
         //function to call after instantiation to sync a cookie, supplying a cookie name, value to write if it does NOT exist, expires
         //time (in ms from now), and a callback for completion (which includes the resolved cookie value as the only argument)
-        function _get_xdomain_cookie_value(cookie_name, callback) {
+        function get(cookie_name, callback) {
 
             _log("got request for a cookie:", cookie_name);
 
@@ -181,12 +177,14 @@
             }
 
             //no local cookie is set/present, so bind CB to iframe ready/error callback so it's pinged a soon as we hit a ready state from iframe
-            _on_iframe_ready(function () {
+            _callbacks.push(function () {
 
                 var _current_cookie_val = cookie_name in _xdomain_cookie_data ? _xdomain_cookie_data[cookie_name] : null;
 
                 _cb(_current_cookie_val, callback);
             });
+
+            firePendingCallbacks();
         }
     };
 
