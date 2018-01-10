@@ -1,6 +1,6 @@
-'use strict';
-
-function pbUserCookieProvider(guidGenerator, playbuzzHomeUrl, debug) {
+(function (exports) {
+    "use strict";
+    function pbUserCookieProvider(guidGenerator, playbuzzHomeUrl, debug) {
 
     // Initialize the cross domain cookie library.
     // At the iframe path there should be an html named 'xdomain_cookie.html'.
@@ -83,3 +83,6 @@ function pbUserCookieProvider(guidGenerator, playbuzzHomeUrl, debug) {
         });
     }
 }
+
+    exports.pbUserCookieProvider = pbUserCookieProvider;
+})(window);
