@@ -1,3 +1,5 @@
+var xDomainCookie = require('./xdomain_cookie');
+
 (function (exports) {
     "use strict";
     function pbUserCookieProvider(guidGenerator, playbuzzHomeUrl, debug) {
