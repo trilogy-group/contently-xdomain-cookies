@@ -275,7 +275,7 @@ module.exports = __webpack_require__(0);
 
 (function (exports) {
     "use strict";
-    function pbUserCookieProvider(guid, playbuzzHomeUrl, debug) {
+    function pbUserCookieProvider(guidGenerator, playbuzzHomeUrl, debug) {
 
     // Initialize the cross domain cookie library.
     // At the iframe path there should be an html named 'xdomain_cookie.html'.
@@ -351,7 +351,7 @@ module.exports = __webpack_require__(0);
      */
     function createAnonymousUser() {
         return JSON.stringify({
-            userId: guid,
+            userId: guidGenerator.generate(),
             nickname: 'Anonymous_user',
             origin: 'Anonymous',
             hasAccounts: false
