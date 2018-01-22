@@ -244,7 +244,7 @@ var xDomainCookie = __webpack_require__(1);
             } catch (e) {
             }
 
-            if (typeof data !== 'object' || (data instanceof Array)) return; //data is not a non-array object
+            if (!data || typeof data !== 'object' || (data instanceof Array)) return; //data is not a non-array object
             if (!('namespace' in data) || data.namespace !== _namespace) return; //wrong namespace for msg
             if (!('msg_type' in data)) return; //data is not a xdomainc-cookie payload
 

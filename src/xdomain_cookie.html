@@ -140,7 +140,7 @@
             } catch (e) {
             }
 
-            if (typeof data !== 'object' || (data instanceof Array)) return; //data is not a non-array object
+            if (!data || typeof data !== 'object' || (data instanceof Array)) return; //data is not a non-array object
             if (!('msg_type' in data) || data.msg_type !== 'xdsc_write') return; //data is not a xdomainc-cookie payload
             if (!('namespace' in data) || data.namespace !== _namespace) return; //wrong namespace for msg
 
