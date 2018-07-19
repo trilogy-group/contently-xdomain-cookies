@@ -106,7 +106,7 @@
 		function _set_local_cookie( cookie_name, cookie_value, expires_days ){
 			var d = new Date();
 		    d.setTime(d.getTime() + ( expires_days*1000*60*60*24) );
-		    var cookie_val = cookie_name + "=" + cookie_value + "; expires="+d.toUTCString() + (_secure_only ? ";secure" : "");
+		    var cookie_val = cookie_name + "=" + cookie_value + "; expires="+d.toUTCString() + (_secure_only ? ";secure" : "") + "; path=/";
 		    _log("_set_local_cookie", cookie_val);
 		    document.cookie = cookie_val;
 		}

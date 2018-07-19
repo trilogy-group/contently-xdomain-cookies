@@ -27,6 +27,6 @@
     "mocha": "^2.4.5",
     "run-sequence": "^1.2.2",
     "serve-static": "^1.10.2",
-    "zombie": "^4.2.1"
+    "zombie": "^5.0.8"
   }
 }
