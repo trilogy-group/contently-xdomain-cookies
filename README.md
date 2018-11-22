@@ -1,5 +1,5 @@
 
-#Cross-Domain Cookie Library
+# Cross-Domain Cookie Library
 
 This library is intended for cases where you have scripts running on different domains (i.e. domain-a.com, domain-b.com) that need to be able to set/share a cookie value across those domains. A few example use cases would be a third-party script that wants to set/share a user identifier across both domains, or a company that wants to track if a user signed up for a newsletter across both their main website and blog that resides on a different TLD. This library also offers a way of writing data to a cookie from a third-party script
 
