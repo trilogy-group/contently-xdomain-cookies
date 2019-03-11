@@ -1,6 +1,10 @@
 {
   "name": "xdomain-cookies",
   "version": "1.0.8",
+  "engineStrict": true,
+  "engines": {
+    "node": "^6.17.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/contently/xdomain-cookies"
@@ -8,7 +12,9 @@
   "description": "JS class for cross-domain shared cookie (via iframe shim)",
   "scripts": {
     "test": "gulp test",
-    "dev": "node test/test_webserver.js"
+    "dev": "node test/test_webserver.js",
+    "postinstall": "npm run requirements-check",
+    "requirements-check": "node check_node_version.js"
   },
   "homepage": "http://contently.github.io/xdomain-cookies/",
   "author": "Evan Carothers",
@@ -26,6 +32,7 @@
     "jshint": "^2.9.3",
     "mocha": "^2.4.5",
     "run-sequence": "^1.2.2",
+    "semver": "^5.6.0",
     "serve-static": "^1.10.2",
     "zombie": "^4.2.1"
   }
