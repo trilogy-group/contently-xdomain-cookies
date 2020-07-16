@@ -1,7 +1,7 @@
 (function(exports) {
 	"use strict";
 	
-	var xDomainCookie = function( iframe_path, namespace, xdomain_only, iframe_load_timeout_ms, secure_only, debug ){
+	var xDomainCookie = function( iframe_path, namespace, xdomain_only, iframe_load_timeout_ms, secure_only, debug, same_site ){
 		//iframe_path = full TLD (and optional path) to location where iframe_shared_cookie.html is served from, and domain cookie will be set on
 		//namespace = namespace to use when identifying that postMessage calls incoming are for our use
 
@@ -17,6 +17,7 @@
 			_default_expires_days = 30,								//default expiration days for cookies when re-uppded
 			_xdomain_only = !!xdomain_only,							//should we ONLY use xdomain cookies (and avoid local cache)
 			_secure_only = !!secure_only,							//should cookies be written as HTTPS-only cookies
+			_same_site = same_site || 'None',							//set SameSite cookie attribute, should be 'None', 'Lax', 'Strict'
 			_debug = !!debug;
 
 		function _log(){
@@ -82,7 +83,8 @@
 				cookie_name: cookie_name,
 				cookie_val: cookie_value,
 				expires_days: expires_days,
-				secure_only: _secure_only
+				secure_only: _secure_only,
+				same_site: _same_site
 			};
 
 			_log("_set_cookie_in_iframe", data);
@@ -104,7 +106,7 @@
 		function _set_local_cookie( cookie_name, cookie_value, expires_days ){
 			var d = new Date();
 		    d.setTime(d.getTime() + ( expires_days*1000*60*60*24) );
-		    var cookie_val = cookie_name + "=" + cookie_value + "; expires="+d.toUTCString() + (_secure_only ? ";secure" : "");
+		    var cookie_val = cookie_name + "=" + cookie_value + "; expires="+d.toUTCString() + (_secure_only ? ";secure" : "") + (_same_site ? ";SameSite=" + _same_site : "");
 		    _log("_set_local_cookie", cookie_val);
 		    document.cookie = cookie_val;
 		}
